@@ -56,7 +56,7 @@ class Keystroke extends React.Component {
 		return (
 			<div className="keystroke-container">
 				<div className="keystroke-line">
-					<input className="keystroke-input" value={this.state.value} onChange={this.handleInputChange.bind(this)} autoFocus />
+					<input className="keystroke-input" value={this.state.value} onChange={this.handleInputChange.bind(this)} autoFocus spellCheck={false} />
 				</div>
 				{this.props.options.map((option, index) =>
 					<KeystrokeOption

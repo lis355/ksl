@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "app"
+		},
+		{
+			"path": "ui"
+		}
+	],
+	"settings": {
+		"search.exclude": {
+			"**/build": true,
+			"**/buildfiles": true
+		},
+		"git.ignoreLimitWarning": true
+	}
+}

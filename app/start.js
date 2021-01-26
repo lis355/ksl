@@ -2,6 +2,12 @@ const EventEmitter = require("events");
 
 const ndapp = require("ndapp");
 
+const components = [
+	// () => new (require("./components/UserDataManager"))(),
+	// () => new (require("./components/LocalDbManager"))(),
+	() => new (require("./components/ElectronManager"))()
+];
+
 class LauncherPlugin extends EventEmitter {
 	constructor(launcher) {
 		super();
@@ -66,11 +72,44 @@ class Launcher extends EventEmitter {
 	}
 }
 
-ndapp(async () => {
-	const launcher = new Launcher();
+class AppManager extends ndapp.Application {
+	constructor() {
+		super();
 
-	launcher.on(LauncherPlugin.OPTION, option => app.log.info(option.title + " " + option.description));
+		const errorHandler = error => {
+			console.error(error.stack);
+		};
 
-	launcher.input("1 + 1");
-	launcher.input("1 + 2");
+		this.onUncaughtException = errorHandler;
+		this.onUnhandledRejection = errorHandler;
+	}
+
+	async run() {
+		await super.run();
+
+		const launcher = new Launcher();
+
+		launcher.on(LauncherPlugin.OPTION, option => app.log.info(option.title + " " + option.description));
+
+		launcher.input("1 + 1");
+		launcher.input("1 + 2");
+	}
+}
+
+const DEVELOPER_ENVIRONMENT = Boolean(process.env.DEVELOPER_ENVIRONMENT);
+const CWD = process.env.PORTABLE_EXECUTABLE_DIR || process.cwd();
+
+ndapp({
+	app: new AppManager(),
+	components,
+	libs: {},
+	enums: {},
+	constants: {
+		DEVELOPER_ENVIRONMENT,
+		CWD
+	},
+	specials: {
+		events: require("./events")
+	},
+	log: {}
 });
