@@ -17,6 +17,7 @@
 		"eslint-config-protop": "^1.0.0"
 	},
 	"scripts": {
+		"eject": "react-scripts eject",
 		"start": "react-scripts start",
 		"build": "react-scripts build"
 	},
