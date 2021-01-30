@@ -84,16 +84,16 @@ class AppManager extends ndapp.Application {
 		this.onUnhandledRejection = errorHandler;
 	}
 
-	async run() {
-		await super.run();
+	// async run() {
+	// 	await super.run();
 
-		const launcher = new Launcher();
+	// 	const launcher = new Launcher();
 
-		launcher.on(LauncherPlugin.OPTION, option => app.log.info(option.title + " " + option.description));
+	// 	launcher.on(LauncherPlugin.OPTION, option => app.log.info(option.title + " " + option.description));
 
-		launcher.input("1 + 1");
-		launcher.input("1 + 2");
-	}
+	// 	launcher.input("1 + 1");
+	// 	launcher.input("1 + 2");
+	// }
 }
 
 const DEVELOPER_ENVIRONMENT = Boolean(process.env.DEVELOPER_ENVIRONMENT);
@@ -103,7 +103,9 @@ ndapp({
 	app: new AppManager(),
 	components,
 	libs: {},
-	enums: {},
+	enums: {
+		MESSAGE_TYPES: require("./constants/messageTypes")
+	},
 	constants: {
 		DEVELOPER_ENVIRONMENT,
 		CWD

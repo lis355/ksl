@@ -1,10 +1,11 @@
 import React from "react";
-import classnames from "classnames";
+
+const { MESSAGE_TYPES } = app.enums;
 
 class KeystrokeOption extends React.Component {
 	render() {
 		return (
-			<div className={classnames("keystroke-line keystroke-option", { "keystroke-line-selected": this.props.selected })}>
+			<div className={app.libs.classnames("keystroke-line keystroke-option", { "keystroke-line-selected": this.props.selected })} onMouseMove={this.props.handleMouseMove}>
 				<div className="keystroke-option-icon" />
 				<div className="keystroke-option-text-container">
 					<p className="keystroke-option-caption">{this.props.caption}</p>
@@ -37,11 +38,23 @@ class Keystroke extends React.Component {
 
 	handleKeyDown(event) {
 		switch (event.key) {
-			case "ArrowUp": this.setState({ seletedIndex: (this.state.seletedIndex - 1 + this.props.options.length) % this.props.options.length }); break;
-			case "ArrowDown": this.setState({ seletedIndex: (this.state.seletedIndex + 1) % this.props.options.length }); break;
+			case "ArrowUp": this.selectPrevious(); break;
+			case "ArrowDown": this.selectNext(); break;
 			case "Enter": break;
 			default: break;
 		}
+	}
+
+	selectPrevious() {
+		this.setState({ seletedIndex: (this.state.seletedIndex - 1 + this.props.options.length) % this.props.options.length });
+	}
+
+	selectNext() {
+		this.setState({ seletedIndex: (this.state.seletedIndex + 1) % this.props.options.length });
+	}
+
+	selectIndex(index) {
+		this.setState({ seletedIndex: index });
 	}
 
 	handleInputChange(event) {
@@ -61,6 +74,7 @@ class Keystroke extends React.Component {
 				{this.props.options.map((option, index) =>
 					<KeystrokeOption
 						key={index} caption={option.caption} description={option.description} selected={index === this.state.seletedIndex}
+						handleMouseMove={() => this.selectIndex(index)}
 					/>
 				)}
 			</div>
@@ -68,14 +82,26 @@ class Keystroke extends React.Component {
 	}
 }
 
-class App extends React.Component {
+export default class App extends React.Component {
+	constructor() {
+		super();
+
+		window.ipcClient.on("message", this.handleMessage.bind(this));
+	}
+
 	state = {
 		options: []
+	}
+
+	handleMessage(message, data) {
+		console.log(message, data);
 	}
 
 	render() {
 		return (
 			<Keystroke options={this.state.options} onInputChange={value => {
+				window.ipcClient.sendMessage(MESSAGE_TYPES.INPUT, value);
+
 				const options = [];
 				for (let i = 0; i < value.length; i++) {
 					options.push({ caption: value.slice(0, i + 1), description: "Start app ..." });
@@ -85,6 +111,4 @@ class App extends React.Component {
 			}} />
 		);
 	}
-}
-
-export default App;
+};

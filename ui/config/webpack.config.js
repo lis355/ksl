@@ -14,7 +14,8 @@ const ManifestPlugin = require("webpack-manifest-plugin");
 const InterpolateHtmlPlugin = require("react-dev-utils/InterpolateHtmlPlugin");
 const WorkboxWebpackPlugin = require("workbox-webpack-plugin");
 const WatchMissingNodeModulesPlugin = require("react-dev-utils/WatchMissingNodeModulesPlugin");
-const ModuleScopePlugin = require("react-dev-utils/ModuleScopePlugin");
+const FilterWarningsPlugin = require("webpack-filter-warnings-plugin");
+// const ModuleScopePlugin = require("react-dev-utils/ModuleScopePlugin");
 const getCSSModuleLocalIdent = require("react-dev-utils/getCSSModuleLocalIdent");
 const ESLintPlugin = require("eslint-webpack-plugin");
 const paths = require("./paths");
@@ -23,7 +24,7 @@ const getClientEnvironment = require("./env");
 const ModuleNotFoundPlugin = require("react-dev-utils/ModuleNotFoundPlugin");
 const ForkTsCheckerWebpackPlugin = require("react-dev-utils/ForkTsCheckerWebpackPlugin");
 const typescriptFormatter = require("react-dev-utils/typescriptFormatter");
-const ReactRefreshWebpackPlugin = require("@pmmmwh/react-refresh-webpack-plugin");
+// const ReactRefreshWebpackPlugin = require("@pmmmwh/react-refresh-webpack-plugin");
 
 const postcssNormalize = require("postcss-normalize");
 
@@ -35,9 +36,9 @@ const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== "false";
 const webpackDevClientEntry = require.resolve(
 	"react-dev-utils/webpackHotDevClient"
 );
-const reactRefreshOverlayEntry = require.resolve(
-	"react-dev-utils/refreshOverlayInterop"
-);
+// const reactRefreshOverlayEntry = require.resolve(
+// 	"react-dev-utils/refreshOverlayInterop"
+// );
 
 // Some apps do not need the benefits of saving a web request, so not inlining the chunk
 // makes for a smoother build process.
@@ -334,16 +335,16 @@ module.exports = function (webpackEnv) {
 			plugins: [
 				// Adds support for installing with Plug'n'Play, leading to faster installs and adding
 				// guards against forgotten dependencies and such.
-				PnpWebpackPlugin,
+				PnpWebpackPlugin
 				// Prevents users from importing files from outside of src/ (or node_modules/).
 				// This often causes confusion because we only process files within src/ with babel.
 				// To fix this, we prevent you from importing files out of src/ -- if you'd like to,
 				// please link the files into your node_modules/ and let module-resolution kick in.
 				// Make sure your source files are compiled, as they will not be processed in any way.
-				new ModuleScopePlugin(paths.appSrc, [
-					paths.appPackageJson,
-					reactRefreshOverlayEntry
-				])
+				// new ModuleScopePlugin(paths.appSrc, [
+				// 	paths.appPackageJson,
+				// 	reactRefreshOverlayEntry
+				// ])
 			]
 		},
 		resolveLoader: {
@@ -415,10 +416,10 @@ module.exports = function (webpackEnv) {
 												}
 											}
 										}
-									],
-									isEnvDevelopment &&
-									shouldUseReactRefresh &&
-									require.resolve("react-refresh/babel")
+									]
+									// isEnvDevelopment &&
+									// shouldUseReactRefresh &&
+									// require.resolve("react-refresh/babel")
 								].filter(Boolean),
 								// This is a feature of `babel-loader` for webpack (not Babel itself).
 								// It enables caching results in ./node_modules/.cache/babel-loader/
@@ -604,19 +605,19 @@ module.exports = function (webpackEnv) {
 			isEnvDevelopment && new webpack.HotModuleReplacementPlugin(),
 			// Experimental hot reloading for React .
 			// https://github.com/facebook/react/tree/master/packages/react-refresh
-			isEnvDevelopment &&
-			shouldUseReactRefresh &&
-			new ReactRefreshWebpackPlugin({
-				overlay: {
-					entry: webpackDevClientEntry,
-					// The expected exports are slightly different from what the overlay exports,
-					// so an interop is included here to enable feedback on module-level errors.
-					module: reactRefreshOverlayEntry,
-					// Since we ship a custom dev client and overlay integration,
-					// the bundled socket handling logic can be eliminated.
-					sockIntegration: false
-				}
-			}),
+			// isEnvDevelopment &&
+			// shouldUseReactRefresh &&
+			// new ReactRefreshWebpackPlugin({
+			// 	overlay: {
+			// 		entry: webpackDevClientEntry,
+			// 		// The expected exports are slightly different from what the overlay exports,
+			// 		// so an interop is included here to enable feedback on module-level errors.
+			// 		module: reactRefreshOverlayEntry,
+			// 		// Since we ship a custom dev client and overlay integration,
+			// 		// the bundled socket handling logic can be eliminated.
+			// 		sockIntegration: false
+			// 	}
+			// }),
 			// Watcher doesn't work well if you mistype casing in a path so we use
 			// a plugin that prints an error when you attempt to do this.
 			// See https://github.com/facebook/create-react-app/issues/240
@@ -707,6 +708,12 @@ module.exports = function (webpackEnv) {
 				silent: true,
 				// The formatter is invoked directly in WebpackDevServerUtils during development
 				formatter: isEnvProduction ? typescriptFormatter : undefined
+			}),
+			new FilterWarningsPlugin({
+				exclude: [
+					/require function is used in a way in which dependencies cannot be statically extracted/,
+					/the request of a dependency is an expression/
+				]
 			}),
 			new ESLintPlugin({
 				// Plugin options
