@@ -3,9 +3,10 @@ const EventEmitter = require("events");
 const ndapp = require("ndapp");
 
 const components = [
-	// () => new (require("./components/UserDataManager"))(),
-	// () => new (require("./components/LocalDbManager"))(),
-	() => new (require("./components/ElectronManager"))()
+	() => new (require("./components/UserDataManager"))(),
+	() => new (require("./components/LocalDbManager"))(),
+	() => new (require("./components/IconsManager"))()
+	// () => new (require("./components/ElectronManager"))()
 ];
 
 class LauncherPlugin extends EventEmitter {
@@ -84,16 +85,22 @@ class AppManager extends ndapp.Application {
 		this.onUnhandledRejection = errorHandler;
 	}
 
-	// async run() {
-	// 	await super.run();
+	get db() {
+		return this.localDbManager.db;
+	}
 
-	// 	const launcher = new Launcher();
+	async run() {
+		await super.run();
 
-	// 	launcher.on(LauncherPlugin.OPTION, option => app.log.info(option.title + " " + option.description));
+		app.log.info(await app.iconsManager.getIconInBase64(app.path.resolve(__dirname, "start.js")));
 
-	// 	launcher.input("1 + 1");
-	// 	launcher.input("1 + 2");
-	// }
+		// const launcher = new Launcher();
+
+		// launcher.on(LauncherPlugin.OPTION, option => app.log.info(option.title + " " + option.description));
+
+		// launcher.input("1 + 1");
+		// launcher.input("1 + 2");
+	}
 }
 
 const DEVELOPER_ENVIRONMENT = Boolean(process.env.DEVELOPER_ENVIRONMENT);
