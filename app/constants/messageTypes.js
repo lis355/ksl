@@ -1,6 +1,7 @@
 const MESSAGE_TYPES = new ndapp.enum([
-	"INPUT",
-	"RUN"
+	"UPDATE_SIZE",
+	"HIDE",
+	"INPUT"
 ]);
 
 module.exports = MESSAGE_TYPES;

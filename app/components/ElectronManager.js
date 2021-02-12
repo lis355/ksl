@@ -1,5 +1,7 @@
-const { app: electronApp, BrowserWindow, screen } = require("electron");
+const { app: electronApp, Tray, Menu, BrowserWindow, screen } = require("electron");
 const { ipcMain: ipc } = require("electron-better-ipc");
+
+const { MESSAGE_TYPES } = app.enums;
 
 module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 	async initialize() {
@@ -9,6 +11,7 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 	}
 
 	handleElectronReady() {
+		this.createTray();
 		this.createWindow();
 
 		ipc.answerRenderer(app.electronManager.window, "data", this.handleMessage.bind(this));
@@ -20,38 +23,54 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 		}
 	}
 
-	createWindow() {
-		const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-		const factor = 0.95;
+	createTray() {
+		this.tray = new Tray(app.path.join(app.constants.CWD, "assets", "icon.ico"));
 
+		const contextMenu = Menu.buildFromTemplate([
+			{ label: "Item1", type: "radio" },
+			{ label: "Item2", type: "radio" },
+			{ label: "Item3", type: "radio", checked: true },
+			{ label: "Item4", type: "radio" }
+		]);
+
+		this.tray.setContextMenu(contextMenu);
+
+		this.tray.on("click", () => {
+			this.window.show();
+		});
+	}
+
+	createWindow() {
 		this.window = new BrowserWindow({
 			backgroundColor: "#00000000",
 			center: true,
-			frame: true,
+			frame: false,
 			maximizable: false,
 			minimizable: false,
-			width: width * factor,
-			height: height * factor,
+			width: 500,
+			resizable: false,
 			webPreferences: {
 				nodeIntegration: true,
 				enableRemoteModule: true,
-				// worldSafeExecuteJavaScript: true
-				// contextIsolation: true,
 				devTools: app.constants.DEVELOPER_ENVIRONMENT
 			},
 			transparent: true,
+			alwaysOnTop: true,
 			show: false,
-			skipTaskbar: true
+			skipTaskbar: false
 		});
 
-		// this.window.webContents.openDevTools();
+		this.window.setBounds({ y: Math.floor(screen.getPrimaryDisplay().workAreaSize.height * 0.25) });
 
+		// this.window.webContents.openDevTools();
 		// this.window.removeMenu();
 
 		this.window.webContents.on("did-finish-load", () => {
-			this.window.show();
+			// this.window.show();
+		});
 
-			// this.window.setIgnoreMouseEvents(true);
+		this.window.on("blur", () => {
+			this.window.hide();
 		});
 
 		electronApp.on("window-all-closed", () => {
@@ -66,6 +85,15 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 	}
 
 	handleMessage(data) {
-		console.log("message", data.message, data.data || {});
+		switch (data.message) {
+			case MESSAGE_TYPES.UPDATE_SIZE: this.updateActualWindowSize(data.data); break;
+			case MESSAGE_TYPES.HIDE: this.window.hide(); break;
+			case MESSAGE_TYPES.INPUT: break;
+			default: break;
+		}
+	}
+
+	updateActualWindowSize(clientSize) {
+		this.window.setBounds({ height: clientSize.height });
 	}
 };
