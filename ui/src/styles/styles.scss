@@ -22,16 +22,13 @@ body, #root {
 
 #root {
     display: flex;
-    // background-color: transparent;
-    // background-image: url(http://www.99naturewallpapers.com/admin/assets/images/wallpapers/1920/amazing-peak--matterhorn_1920x1080.png);
 }
 
 .keystroke {
     &-container {
         margin: auto;
-        margin-top: 25vh;
         box-shadow: 0px 0px 5px 1px #4C4C4C;
-        width: 30vw;
+        width: calc(100vw - 7px);
     }
 
     &-color {

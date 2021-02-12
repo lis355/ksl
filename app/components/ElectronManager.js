@@ -27,7 +27,7 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 		this.window = new BrowserWindow({
 			backgroundColor: "#00000000",
 			center: true,
-			frame: false,
+			frame: true,
 			maximizable: false,
 			minimizable: false,
 			width: width * factor,
@@ -46,12 +46,12 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 
 		// this.window.webContents.openDevTools();
 
-		this.window.removeMenu();
+		// this.window.removeMenu();
 
 		this.window.webContents.on("did-finish-load", () => {
 			this.window.show();
 
-			this.window.setIgnoreMouseEvents(true);
+			// this.window.setIgnoreMouseEvents(true);
 		});
 
 		electronApp.on("window-all-closed", () => {
