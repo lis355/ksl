@@ -48,7 +48,7 @@ class App extends ndapp.Application {
 		clearDirSync(this.buildFilesDirectory);
 		clearDirSync(this.buildDirectory);
 
-		// await this.buildLauncherBundle();
+		await this.buildLauncherBundle();
 		await this.buildLauncherUI();
 		this.createPackageFile();
 		await this.buildElectron();
@@ -57,20 +57,20 @@ class App extends ndapp.Application {
 		app.log.info(`Build ${info.name} v${info.version} successful`);
 	}
 
-	// async buildLauncherBundle() {
-	// 	const exitCode = await app.common.tools.executeShellCommand({
-	// 		cmd: "yarn run webpack --config webpack.config.js",
-	// 		cwd: this.mainDirectory,
-	// 		onStdOutData: data => {
-	// 			app.log.info(data.toString());
-	// 		},
-	// 		onStdErrData: data => {
-	// 			app.log.info(data.toString());
-	// 		}
-	// 	});
+	async buildLauncherBundle() {
+		const exitCode = await executeShellCommand({
+			cmd: "yarn run webpack --config webpack.config.js",
+			cwd: this.mainDirectory,
+			onStdOutData: data => {
+				app.log.info(data.toString());
+			},
+			onStdErrData: data => {
+				app.log.info(data.toString());
+			}
+		});
 
-	// 	if (exitCode !== 0) throw new Error("Can't build bot bundle");
-	// }
+		if (exitCode !== 0) throw new Error("Can't build bot bundle");
+	}
 
 	async buildLauncherUI() {
 		await executeShellCommand({
@@ -92,9 +92,9 @@ class App extends ndapp.Application {
 	}
 
 	createPackageFile() {
-		const packageFile = app.libs._.omit(info, "build", "devDependencies", "dependencies.electron");
+		const packageFile = app.libs._.omit(info, "build", "dependencies", "devDependencies");
 
-		// packageFile.main = "launcher.bundle.js";
+		packageFile.main = "app.bundle.js";
 
 		app.tools.json.save(app.path.join(this.buildFilesDirectory, "package.json"), packageFile);
 	}

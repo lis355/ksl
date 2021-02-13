@@ -15,7 +15,12 @@ class AppManager extends ndapp.Application {
 		super();
 
 		const errorHandler = error => {
-			console.error(error.stack);
+			if (app &&
+				app.log) {
+				app.log.error(error.stack);
+			} else {
+				console.error(error.stack);
+			}
 		};
 
 		this.onUncaughtException = errorHandler;
@@ -36,7 +41,7 @@ class AppManager extends ndapp.Application {
 }
 
 const DEVELOPER_ENVIRONMENT = Boolean(process.env.DEVELOPER_ENVIRONMENT);
-const CWD = process.env.PORTABLE_EXECUTABLE_DIR || process.cwd();
+const CWD = process.cwd();
 
 ndapp({
 	app: new AppManager(),
@@ -53,5 +58,7 @@ ndapp({
 		info: require("./package.json"),
 		events: require("./events")
 	},
-	log: {}
+	log: {
+		file: DEVELOPER_ENVIRONMENT ? false : ndapp.path.join(CWD, "log.txt")
+	}
 });
