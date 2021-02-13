@@ -1,4 +1,4 @@
-const { app: electronApp, Tray, Menu, BrowserWindow, screen } = require("electron");
+const { app: electronApp, Tray, Menu, BrowserWindow, screen, globalShortcut, shell } = require("electron");
 const { ipcMain: ipc } = require("electron-better-ipc");
 
 const { MESSAGE_TYPES } = app.enums;
@@ -6,6 +6,8 @@ const { MESSAGE_TYPES } = app.enums;
 module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 	async initialize() {
 		await super.initialize();
+
+		electronApp.commandLine.appendSwitch("wm-window-animations-disabled");
 
 		electronApp.whenReady().then(this.handleElectronReady.bind(this));
 	}
@@ -45,7 +47,10 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 				enabled: false
 			},
 			{
-				label: "Options"
+				label: "Options",
+				click: () => {
+					shell.openPath(app.optionsManager.optionsFilePath);
+				}
 			},
 			{
 				type: "separator"
@@ -59,9 +64,12 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 		]);
 
 		this.tray.setContextMenu(contextMenu);
+		this.tray.setToolTip(`${app.info.name} v${app.info.version}`);
 
 		this.tray.on("click", () => {
-			this.switchWindowShowing();
+			if (!this.window.isVisible()) {
+				this.window.show();
+			}
 		});
 	}
 
@@ -82,7 +90,7 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 			transparent: true,
 			alwaysOnTop: true,
 			show: false,
-			skipTaskbar: false
+			skipTaskbar: true
 		});
 
 		this.window.setBounds({ y: Math.floor(screen.getPrimaryDisplay().workAreaSize.height * 0.25) });
@@ -91,11 +99,19 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 		// this.window.removeMenu();
 
 		this.window.webContents.on("did-finish-load", () => {
-			// this.switchWindowShowing();
+			if (app.constants.DEVELOPER_ENVIRONMENT) {
+				this.window.show();
+			}
 		});
 
 		this.window.on("blur", () => {
-			this.switchWindowShowing();
+			this.window.hide();
+		});
+
+		globalShortcut.register(app.optionsManager.options.runHotkey, () => {
+			if (!this.window.isVisible()) {
+				this.window.show();
+			}
 		});
 
 		electronApp.on("window-all-closed", () => {
@@ -103,14 +119,10 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 				electronApp.quit();
 			}
 		});
-	}
 
-	switchWindowShowing() {
-		if (!this.window.isVisible()) {
-			this.window.show();
-		} else {
-			this.window.hide();
-		}
+		electronApp.on("will-quit", () => {
+			globalShortcut.unregisterAll();
+		});
 	}
 
 	updateActualWindowSize(clientSize) {

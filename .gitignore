@@ -1,5 +1,6 @@
 node_modules/
 build/
+buildfiles/
 userData/
 
 .env.local

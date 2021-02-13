@@ -3,6 +3,7 @@ const ndapp = require("ndapp");
 const components = [
 	() => new (require("./components/UserDataManager"))(),
 	() => new (require("./components/LocalDbManager"))(),
+	() => new (require("./components/OptionsManager"))(),
 	() => new (require("./components/IconsManager"))(),
 	() => new (require("./components/NotificationManager"))(),
 	() => new (require("./components/KeystrokeLauncherManager"))(),
