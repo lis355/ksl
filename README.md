@@ -1,4 +1,6 @@
-![](https://raw.github.com/lis355/ksl/master/.github/screen.png)
+<p align="center">
+  <img src="https://raw.github.com/lis355/ksl/master/.github/screen.png">
+</p>
 
 # ksl
 Keystroke launcher for developers who loves JS
