@@ -10,6 +10,19 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 		electronApp.whenReady().then(this.handleElectronReady.bind(this));
 	}
 
+	sendMessage(message, data = {}) {
+		ipc.callRenderer(this.window, "data", { message, data });
+	}
+
+	handleMessage(data) {
+		switch (data.message) {
+			case MESSAGE_TYPES.UPDATE_SIZE: this.updateActualWindowSize(data.data); break;
+			case MESSAGE_TYPES.HIDE: this.window.hide(); break;
+			case MESSAGE_TYPES.INPUT: break;
+			default: break;
+		}
+	}
+
 	handleElectronReady() {
 		this.createTray();
 		this.createWindow();
@@ -27,16 +40,28 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 		this.tray = new Tray(app.path.join(app.constants.CWD, "assets", "icon.ico"));
 
 		const contextMenu = Menu.buildFromTemplate([
-			{ label: "Item1", type: "radio" },
-			{ label: "Item2", type: "radio" },
-			{ label: "Item3", type: "radio", checked: true },
-			{ label: "Item4", type: "radio" }
+			{
+				label: `${app.info.name} v${app.info.version}`,
+				enabled: false
+			},
+			{
+				label: "Options"
+			},
+			{
+				type: "separator"
+			},
+			{
+				label: "Quit",
+				click: () => {
+					electronApp.quit();
+				}
+			}
 		]);
 
 		this.tray.setContextMenu(contextMenu);
 
 		this.tray.on("click", () => {
-			this.window.show();
+			this.switchWindowShowing();
 		});
 	}
 
@@ -66,30 +91,25 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 		// this.window.removeMenu();
 
 		this.window.webContents.on("did-finish-load", () => {
-			// this.window.show();
+			// this.switchWindowShowing();
 		});
 
 		this.window.on("blur", () => {
-			this.window.hide();
+			this.switchWindowShowing();
 		});
 
 		electronApp.on("window-all-closed", () => {
 			if (process.platform !== "darwin") {
-				app.quit();
+				electronApp.quit();
 			}
 		});
 	}
 
-	sendMessage(message, data = {}) {
-		ipc.callRenderer(this.window, "data", { message, data });
-	}
-
-	handleMessage(data) {
-		switch (data.message) {
-			case MESSAGE_TYPES.UPDATE_SIZE: this.updateActualWindowSize(data.data); break;
-			case MESSAGE_TYPES.HIDE: this.window.hide(); break;
-			case MESSAGE_TYPES.INPUT: break;
-			default: break;
+	switchWindowShowing() {
+		if (!this.window.isVisible()) {
+			this.window.show();
+		} else {
+			this.window.hide();
 		}
 	}
 

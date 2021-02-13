@@ -4,6 +4,7 @@ const components = [
 	() => new (require("./components/UserDataManager"))(),
 	() => new (require("./components/LocalDbManager"))(),
 	() => new (require("./components/IconsManager"))(),
+	() => new (require("./components/NotificationManager"))(),
 	() => new (require("./components/KeystrokeLauncherManager"))(),
 	() => new (require("./components/ElectronManager"))()
 ];
@@ -29,7 +30,7 @@ class AppManager extends ndapp.Application {
 
 		// app.log.info(await app.iconsManager.getIconInBase64(app.path.resolve(__dirname, "start.js")));
 
-		app.keystrokeLauncherManager.input("s");
+		// app.keystrokeLauncherManager.input("s");
 	}
 }
 
@@ -48,6 +49,7 @@ ndapp({
 		CWD
 	},
 	specials: {
+		info: require("./package.json"),
 		events: require("./events")
 	},
 	log: {}
