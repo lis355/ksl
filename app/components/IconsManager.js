@@ -11,7 +11,7 @@ module.exports = class IconsManager extends ndapp.ApplicationComponent {
 		app.fs.ensureDirSync(app.userDataManager.tempPath());
 	}
 
-	async getIconInBase64(filePath) {
+	async getIconByFilePathInBase64(filePath) {
 		const filePathHash = app.tools.hash(filePath);
 		let dbPath = `cache.icons.${filePathHash}`;
 		let icon = app.db.get(dbPath, null).value();
@@ -34,7 +34,7 @@ module.exports = class IconsManager extends ndapp.ApplicationComponent {
 		try {
 			await ps.invoke();
 
-			icon = app.fs.readFileSync(tempIconPngPath, { encoding: "base64" });
+			icon = this.loadPngIconInBase64(tempIconPngPath);
 			app.db.set(dbPath, icon).write();
 			app.fs.removeSync(tempIconPngPath);
 		} catch (error) {
@@ -44,5 +44,9 @@ module.exports = class IconsManager extends ndapp.ApplicationComponent {
 		}
 
 		return icon;
+	}
+
+	loadPngIconInBase64(filePath) {
+		return app.fs.readFileSync(filePath, { encoding: "base64" });
 	}
 };

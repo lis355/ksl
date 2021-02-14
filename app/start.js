@@ -2,12 +2,15 @@ const ndapp = require("ndapp");
 
 const components = [
 	() => new (require("./components/UserDataManager"))(),
+	() => new (require("./components/AssetsManager"))(),
 	() => new (require("./components/LocalDbManager"))(),
 	() => new (require("./components/OptionsManager"))(),
 	() => new (require("./components/IconsManager"))(),
 	() => new (require("./components/NotificationManager"))(),
 	() => new (require("./components/KeystrokeLauncherManager"))(),
-	() => new (require("./components/ElectronManager"))()
+	() => new (require("./components/ElectronManager"))(),
+	() => new (require("./components/HotkeysManager"))(),
+	() => new (require("./components/ScriptsManager"))()
 ];
 
 class AppManager extends ndapp.Application {

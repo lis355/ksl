@@ -4,11 +4,13 @@ module.exports = class KeystrokeLauncherManager extends ndapp.ApplicationCompone
 	async initialize() {
 		await super.initialize();
 
-		this.createPlugins();
+		await this.createPlugins();
 	}
 
-	createPlugins() {
+	async createPlugins() {
 		this.plugins = createPlugins(this);
+
+		await Promise.all(this.plugins.map(async plugin => plugin.load()));
 
 		// this.plugins.forEach(plugin => { plugin.on(LauncherPlugin.OPTION, this.handlePluginOption.bind(this)); });
 	}

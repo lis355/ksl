@@ -54,6 +54,14 @@ class Keystroke extends React.Component {
 				break;
 
 			case "Enter":
+				const input = this.state.value.trim();
+				if (input) {
+					window.ipcClient.sendMessage(MESSAGE_TYPES.EXECUTE, input);
+				}
+
+				window.ipcClient.sendMessage(MESSAGE_TYPES.HIDE);
+				break;
+
 			case "Escape":
 				window.ipcClient.sendMessage(MESSAGE_TYPES.HIDE);
 				break;
@@ -64,11 +72,12 @@ class Keystroke extends React.Component {
 	}
 
 	handleInputChange(event) {
-		const value = event.target.value;
+		const value = event.target.value.trimStart();
+		if (value === this.state.value) return;
 
-		this.setState({ value });
-
-		this.props.onInputChange && this.props.onInputChange(value);
+		this.setState({ value }, () => {
+			this.props.onInputChange && this.props.onInputChange(value);
+		});
 	}
 
 	selectPrevious() {

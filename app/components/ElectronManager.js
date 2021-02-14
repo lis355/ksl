@@ -1,4 +1,4 @@
-const { app: electronApp, Tray, Menu, BrowserWindow, screen, globalShortcut, shell } = require("electron");
+const { app: electronApp, Tray, Menu, BrowserWindow, screen, shell } = require("electron");
 const { ipcMain: ipc } = require("electron-better-ipc");
 
 const { MESSAGE_TYPES } = app.enums;
@@ -36,10 +36,12 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 		} else {
 			this.window.loadFile("public/index.html");
 		}
+
+		app.events.emit(app.events.EVENT_TYPES.ELECTRON_APP_READY);
 	}
 
 	createTray() {
-		this.tray = new Tray(app.path.join(app.constants.CWD, "assets", "icon.ico"));
+		this.tray = new Tray(app.assetsManager.assetPath("icon.ico"));
 
 		const contextMenu = Menu.buildFromTemplate([
 			{
@@ -67,9 +69,7 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 		this.tray.setToolTip(`${app.info.name} v${app.info.version}`);
 
 		this.tray.on("click", () => {
-			if (!this.window.isVisible()) {
-				this.window.show();
-			}
+			this.showWindowIfNotVisible();
 		});
 	}
 
@@ -108,12 +108,6 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 			this.window.hide();
 		});
 
-		globalShortcut.register(app.optionsManager.options.runHotkey, () => {
-			if (!this.window.isVisible()) {
-				this.window.show();
-			}
-		});
-
 		electronApp.on("window-all-closed", () => {
 			if (process.platform !== "darwin") {
 				electronApp.quit();
@@ -121,11 +115,17 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 		});
 
 		electronApp.on("will-quit", () => {
-			globalShortcut.unregisterAll();
+			app.events.emit(app.events.EVENT_TYPES.ELECTRON_APP_WILL_CLOSE);
 		});
 	}
 
 	updateActualWindowSize(clientSize) {
 		this.window.setBounds({ height: clientSize.height });
+	}
+
+	showWindowIfNotVisible() {
+		if (!this.window.isVisible()) {
+			this.window.show();
+		}
 	}
 };

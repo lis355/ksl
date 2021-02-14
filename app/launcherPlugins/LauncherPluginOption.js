@@ -6,6 +6,4 @@ module.exports = class LauncherPluginOption {
 		this.title = title;
 		this.description = description;
 	}
-
-	execute() { }
 };

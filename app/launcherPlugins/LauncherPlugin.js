@@ -9,10 +9,14 @@ module.exports = class LauncherPlugin extends EventEmitter {
 		this.launcher = launcher;
 	}
 
+	async load() { }
+
 	input(str) { }
 	abort() { }
 
 	emitOption(option) {
 		// this.emit(LauncherPlugin.OPTION, new LauncherPluginOption(this, option));
 	}
+
+	async execute(option) { }
 };
