@@ -1,40 +1,18 @@
 import React from "react";
-import ReactDOM from "react-dom";
+import ReactDOM from "react-dom/client";
+
+import App from "./components/App.js";
 
 import "normalize.css";
-import "reset-css";
+import "./index.scss";
 
-import "./styles/styles.scss";
+import createMessageClient from "./logic/connection/createMessageClient.js";
 
-import ndapp from "ndapp";
+const messageClient = createMessageClient();
 
-class Application extends ndapp.Application {
-	async run() {
-		await super.run();
-
-		require("./connection/IpcClient");
-
-		const App = require("./components/App/App").default;
-
-		ReactDOM.render(
-			<App />,
-			document.querySelector("#root")
-		);
-	}
-};
-
-ndapp({
-	app: new Application(),
-	enums: {
-		MESSAGE_TYPES: require("../../app/constants/messageTypes")
-	},
-	constants: {
-	},
-	libs: {
-		classnames: require("classnames")
-	},
-	tools: {
-	},
-	specials: {
-	}
-});
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(
+	<React.StrictMode>
+		<App messageClient={messageClient} />
+	</React.StrictMode>
+);

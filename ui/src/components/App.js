@@ -1,14 +1,26 @@
 import React from "react";
+import classnames from "classnames";
 
-const { MESSAGE_TYPES } = app.enums;
+const MESSAGE_TYPES = Object.freeze({
+	UPDATE_SIZE: 1,
+	HIDE: 2,
+	EXECUTE: 3,
+	INPUT: 4
+});
+
+function getPngSrcDataFromBase64String(base64String) {
+	return "data:image/png;base64," + base64String;
+}
 
 class KeystrokeOption extends React.Component {
 	render() {
 		return (
-			<div className={app.libs.classnames("keystroke-line keystroke-option", { "keystroke-line-selected": this.props.selected })} onMouseMove={this.props.handleMouseMove}>
+			<div className={classnames("keystroke-line keystroke-option", { "keystroke-line-selected": this.props.selected })}
+				onMouseMove={this.props.handleMouseMove}
+			>
 				{this.props.icon &&
 					<div className="keystroke-option-icon">
-						<img src={`data:image/png;base64,${this.props.icon}`} alt="" />
+						<img src={getPngSrcDataFromBase64String(this.props.icon)} alt="" />
 					</div>
 				}
 				<div className="keystroke-option-text-container">
@@ -21,55 +33,10 @@ class KeystrokeOption extends React.Component {
 }
 
 class Keystroke extends React.Component {
-	constructor() {
-		super();
-
-		this.handleKeyDown = this.handleKeyDown.bind(this);
-	}
-
 	state = {
 		value: "",
 		seletedIndex: 0
-	}
-
-	componentDidMount() {
-		document.addEventListener("keydown", this.handleKeyDown);
-	}
-
-	componentWillUnmount() {
-		document.removeEventListener("keydown", this.handleKeyDown);
-	}
-
-	handleKeyDown(event) {
-		switch (event.key) {
-			case "ArrowUp":
-				this.selectPrevious();
-				event.preventDefault();
-				break;
-
-			case "Tab":
-			case "ArrowDown":
-				this.selectNext();
-				event.preventDefault();
-				break;
-
-			case "Enter":
-				const input = this.state.value.trim();
-				if (input) {
-					window.ipcClient.sendMessage(MESSAGE_TYPES.EXECUTE, input);
-				}
-
-				window.ipcClient.sendMessage(MESSAGE_TYPES.HIDE);
-				break;
-
-			case "Escape":
-				window.ipcClient.sendMessage(MESSAGE_TYPES.HIDE);
-				break;
-
-			default:
-				break;
-		}
-	}
+	};
 
 	handleInputChange(event) {
 		const value = event.target.value.trimStart();
@@ -96,7 +63,13 @@ class Keystroke extends React.Component {
 		return (
 			<div className="keystroke-container">
 				<div className="keystroke-line">
-					<input className="keystroke-input" value={this.state.value} onChange={this.handleInputChange.bind(this)} autoFocus spellCheck={false} />
+					<input
+						className="keystroke-input"
+						autoFocus
+						spellCheck={false}
+						value={this.state.value}
+						onChange={this.handleInputChange.bind(this)}
+					/>
 				</div>
 				{this.props.options.map((option, index) =>
 					<KeystrokeOption
@@ -113,29 +86,69 @@ export default class App extends React.Component {
 	constructor() {
 		super();
 
-		window.ipcClient.on("data", this.handleMessage.bind(this));
+		this.handleKeyDown = this.handleKeyDown.bind(this);
+		this.handleMessage = this.handleMessage.bind(this);
 	}
 
 	state = {
 		options: []
-	}
-
-	handleMessage(message, data) {
-		console.log(message, data);
-	}
+	};
 
 	componentDidMount() {
+		document.addEventListener("keydown", this.handleKeyDown);
+
+		this.props.messageClient.on("message", this.handleMessage);
+
 		this.sendMessageUpdateSize();
+	}
+
+	componentWillUnmount() {
+		document.removeEventListener("keydown", this.handleKeyDown);
+
+		this.props.messageClient.off("message", this.handleMessage);
 	}
 
 	componentDidUpdate() {
 		this.sendMessageUpdateSize();
 	}
 
+	handleKeyDown(event) {
+		switch (event.key) {
+			case "ArrowUp":
+				this.selectPrevious();
+				event.preventDefault();
+				break;
+
+			case "Tab":
+			case "ArrowDown":
+				this.selectNext();
+				event.preventDefault();
+				break;
+
+			case "Enter":
+				const input = this.state.value.trim();
+				if (input) window.ipcClient.sendMessage(MESSAGE_TYPES.EXECUTE, input);
+
+				window.ipcClient.sendMessage(MESSAGE_TYPES.HIDE);
+				break;
+
+			case "Escape":
+				window.ipcClient.sendMessage(MESSAGE_TYPES.HIDE);
+				break;
+
+			default:
+				break;
+		}
+	}
+
+	handleMessage(message, data) {
+		console.log(message, data);
+	}
+
 	sendMessageUpdateSize() {
 		const element = document.querySelector(".keystroke-container");
 
-		window.ipcClient.sendMessage(MESSAGE_TYPES.UPDATE_SIZE, {
+		this.props.messageClient.sendMessage(MESSAGE_TYPES.UPDATE_SIZE, {
 			width: element.clientWidth + 5 * 2,
 			height: element.clientHeight + 5 * 2
 		});
@@ -143,9 +156,10 @@ export default class App extends React.Component {
 
 	render() {
 		return (
-			<Keystroke options={this.state.options}
+			<Keystroke
+				options={this.state.options}
 				onInputChange={value => {
-					window.ipcClient.sendMessage(MESSAGE_TYPES.INPUT, value);
+					this.props.messageClient.sendMessage(MESSAGE_TYPES.INPUT, value);
 
 					// const options = [];
 					// for (let i = 0; i < value.length; i++) {

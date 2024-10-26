@@ -1,35 +1,36 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "start",
-            "type": "node",
-            "request": "launch",
-            "cwd": "${workspaceFolder}",
-            "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
-            "windows": {
-                "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd"
-            },
-            "args": [
-                "."
-            ],
-            "env": {
-                "DEVELOPER_ENVIRONMENT": "true"
-            },
-            "outputCapture": "std"
-        },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "build",
-            "program": "${workspaceFolder}/build.js",
-            "cwd": "${workspaceFolder}",
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
-        }
-    ]
+	// Use IntelliSense to learn about possible attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "start",
+			"type": "node",
+			"request": "launch",
+			"cwd": "${workspaceFolder}",
+			"runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
+			"windows": {
+				"runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd"
+			},
+			"outputCapture": "std",
+			"args": [
+				".",
+				"--enable-logging"
+			],
+			"env": {
+				"DEVELOPER_ENVIRONMENT": "true"
+			}
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "build",
+			"program": "${workspaceFolder}/build.js",
+			"cwd": "${workspaceFolder}",
+			"skipFiles": [
+				"<node_internals>/**"
+			]
+		}
+	]
 }

@@ -6,12 +6,12 @@ module.exports = class ScriptsManager extends ndapp.ApplicationComponent {
 	}
 
 	handleElectronAppReady() {
-		app.optionsManager.options.scripts.forEach(scriptOptions => {
-			const scriptClass = require(app.path.resolve(app.constants.CWD, scriptOptions.file));
-			const script = new scriptClass();
+		app.optionsManager.options.plugins.forEach(pluginOptions => {
+			const pluginClass = require(app.path.resolve(app.constants.CWD, pluginOptions.file));
+			const plugin = new pluginClass();
 
-			app.hotkeysManager.register(scriptOptions.hotkey, () => {
-				script.execute();
+			app.hotkeysManager.register(pluginOptions.hotkey, () => {
+				plugin.execute();
 			});
 		});
 	}
