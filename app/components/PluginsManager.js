@@ -20,29 +20,43 @@ export default class PluginsManager extends ndapp.ApplicationComponent {
 	async handleElectronAppReady() {
 		const optionsFileDirectory = app.path.dirname(app.optionsManager.optionsFilePath);
 		for (const pluginOptions of app.optionsManager.options.plugins) {
-			let pluginPath = app.path.resolve(optionsFileDirectory, pluginOptions.file);
+			const pluginDirectory = app.path.resolve(optionsFileDirectory, pluginOptions.directory);
 
-			app.log.info(`[PluginsManager]: try to load plugin at ${pluginPath}`);
+			let plugin;
 
-			// TODO refactor
-			pluginPath = "file:///" + pluginPath;
+			try {
+				app.log.info(`[PluginsManager]: try to load plugin at ${pluginDirectory}`);
 
-			const module = await import(pluginPath);
-			const pluginClass = module.default;
+				const pluginPackage = app.fs.readJsonSync(app.path.resolve(pluginDirectory, "package.json"));
 
-			// TODO check pluginClass for functions	
+				const pluginPath = "file:///" + app.path.resolve(pluginDirectory, pluginPackage.main);
 
-			const plugin = new pluginClass();
+				const module = await import(pluginPath);
 
-			await plugin.load();
+				const pluginClass = module.default;
+
+				// TODO check pluginClass for functions	
+
+				plugin = new pluginClass();
+
+				if (plugin.load) await plugin.load();
+
+				app.log.info(`[PluginsManager]: plugin at ${pluginDirectory} loaded`);
+
+				// DEBUG
+				const result = await plugin.execute();
+				app.log.info(`[PluginsManager]: plugin executed ${result}`);
+			} catch (error) {
+				app.log.error(`[PluginsManager]: plugin can't load at ${pluginDirectory} with error: ${error.stack}`);
+			}
 
 			this.plugins.push(plugin);
 
-			if (pluginOptions.hotkey) {
-				app.hotkeysManager.register(pluginOptions.hotkey, () => {
-					plugin.execute();
-				});
-			}
+			// if (pluginOptions.hotkey) {
+			// 	app.hotkeysManager.register(pluginOptions.hotkey, () => {
+			// 		plugin.execute();
+			// 	});
+			// }
 		}
 	}
 
