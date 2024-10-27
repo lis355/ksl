@@ -87,7 +87,7 @@ export default class App extends React.Component {
 		super();
 
 		this.handleKeyDown = this.handleKeyDown.bind(this);
-		this.handleMessage = this.handleMessage.bind(this);
+		this.handleMessage = this.handleMessageClientMessage.bind(this);
 	}
 
 	state = {
@@ -97,7 +97,7 @@ export default class App extends React.Component {
 	componentDidMount() {
 		document.addEventListener("keydown", this.handleKeyDown);
 
-		this.props.messageClient.on("message", this.handleMessage);
+		this.props.messageClient.subscribeOnMessage(this.handleMessageClientMessage);
 
 		this.sendMessageUpdateSize();
 	}
@@ -105,7 +105,7 @@ export default class App extends React.Component {
 	componentWillUnmount() {
 		document.removeEventListener("keydown", this.handleKeyDown);
 
-		this.props.messageClient.off("message", this.handleMessage);
+		this.props.messageClient.unsubscribeOnMessage(this.handleMessageClientMessage);
 	}
 
 	componentDidUpdate() {
@@ -125,30 +125,30 @@ export default class App extends React.Component {
 				event.preventDefault();
 				break;
 
-			case "Enter":
-				const input = this.state.value.trim();
-				if (input) window.ipcClient.sendMessage(MESSAGE_TYPES.EXECUTE, input);
+			// case "Enter":
+			// 	const input = this.state.value.trim();
+			// 	if (input) window.ipcClient.sendMessage(MESSAGE_TYPES.EXECUTE, input);
 
-				window.ipcClient.sendMessage(MESSAGE_TYPES.HIDE);
-				break;
+			// 	window.ipcClient.sendMessage(MESSAGE_TYPES.HIDE);
+			// 	break;
 
-			case "Escape":
-				window.ipcClient.sendMessage(MESSAGE_TYPES.HIDE);
-				break;
+			// case "Escape":
+			// 	window.ipcClient.sendMessage(MESSAGE_TYPES.HIDE);
+			// 	break;
 
 			default:
 				break;
 		}
 	}
 
-	handleMessage(message, data) {
-		console.log(message, data);
+	handleMessageClientMessage(message) {
 	}
 
 	sendMessageUpdateSize() {
 		const element = document.querySelector(".keystroke-container");
 
-		this.props.messageClient.sendMessage(MESSAGE_TYPES.UPDATE_SIZE, {
+		this.props.messageClient.sendMessage({
+			message: MESSAGE_TYPES.UPDATE_SIZE,
 			width: element.clientWidth + 5 * 2,
 			height: element.clientHeight + 5 * 2
 		});
@@ -159,7 +159,10 @@ export default class App extends React.Component {
 			<Keystroke
 				options={this.state.options}
 				onInputChange={value => {
-					this.props.messageClient.sendMessage(MESSAGE_TYPES.INPUT, value);
+					this.props.messageClient.sendMessage({
+						message: MESSAGE_TYPES.INPUT,
+						value
+					});
 
 					// const options = [];
 					// for (let i = 0; i < value.length; i++) {

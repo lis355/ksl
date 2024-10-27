@@ -4,8 +4,8 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"start": "react-scripts start",
-		"build": "react-scripts build"
+		"ui-start": "react-scripts start",
+		"ui-build": "react-scripts build"
 	},
 	"dependencies": {
 		"classnames": "^2.5.1",
@@ -19,7 +19,7 @@
 		"sass": "^1.80.4"
 	},
 	"devDependencies": {
-		"eslint": "^9.13.0",
+		"eslint": "^8.54.0",
 		"eslint-config-react-app": "^7.0.1"
 	},
 	"browserslist": {

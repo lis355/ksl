@@ -46,6 +46,8 @@ class AppManager extends ndapp.Application {
 const DEVELOPER_ENVIRONMENT = Boolean(process.env.DEVELOPER_ENVIRONMENT);
 const CWD = process.cwd();
 
+global.isDevelopment = DEVELOPER_ENVIRONMENT;
+
 ndapp({
 	app: new AppManager(),
 	components,

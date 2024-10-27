@@ -1,18 +1,17 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 
-import App from "./components/App.js";
-
 import "normalize.css";
 import "./index.scss";
 
-import createMessageClient from "./logic/connection/createMessageClient.js";
+import App from "./components/App.js";
+import getMessageClient from "./logic/connection/getMessageClient.js";
 
-const messageClient = createMessageClient();
+window.isDevelopment = process.env.NODE_ENV === "development";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
 	<React.StrictMode>
-		<App messageClient={messageClient} />
+		<App messageClient={getMessageClient()} />
 	</React.StrictMode>
 );

@@ -13,10 +13,16 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 	}
 
 	sendMessage(message, data = {}) {
+		if (global.isDevelopment) console.log("MAIN ElectronManager.sendMessage", message, data);
+
 		ipc.callRenderer(this.window, "message", { message, data });
 	}
 
 	handleMessage(data) {
+		if (global.isDevelopment) console.log("MAIN ElectronManager.handleMessage", data);
+
+		this.sendMessage("handled", Date());
+
 		switch (data.message) {
 			case MESSAGE_TYPES.UPDATE_SIZE: this.updateActualWindowSize(data.data); break;
 			case MESSAGE_TYPES.HIDE: this.window.hide(); break;
@@ -39,7 +45,7 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 		this.createTray();
 		this.createWindow();
 
-		ipc.answerRenderer(app.electronManager.window, "message", this.handleMessage.bind(this));
+		ipc.answerRenderer(this.window, "message", this.handleMessage.bind(this));
 
 		if (app.constants.DEVELOPER_ENVIRONMENT) {
 			// this.window.loadURL("http://localhost:8000/");
@@ -93,9 +99,12 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 			minimizable: false,
 			width: 500,
 			resizable: false,
+			// https://github.com/electron/electron-quick-start/issues/463
+			// threhe are many problems with using electron in ui, now you cannot ust import it in beginning of file
+			// you must use these webPreferences options
 			webPreferences: {
 				nodeIntegration: true,
-				webSecurity: false,
+				contextIsolation: false,
 				enableRemoteModule: true,
 				devTools: false
 			},
@@ -130,11 +139,6 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 		this.window.on("blur", () => {
 			this.window.hide();
 		});
-
-		// DEBUG
-		setInterval(() => {
-			this.sendMessage("handled", Date());
-		}, 1000);
 	}
 
 	updateActualWindowSize(clientSize) {
