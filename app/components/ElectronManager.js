@@ -1,5 +1,7 @@
 import { app as electronApp, Tray, Menu, BrowserWindow, screen, shell, ipcMain } from "electron";
 
+const DEBUG_FRAME = false;
+
 export default class ElectronManager extends ndapp.ApplicationComponent {
 	async initialize() {
 		await super.initialize();
@@ -21,7 +23,7 @@ export default class ElectronManager extends ndapp.ApplicationComponent {
 		switch (message.message) {
 			case app.enums.MESSAGE_TYPES.UPDATE_SIZE: this.updateActualWindowSize(message); break;
 			case app.enums.MESSAGE_TYPES.HIDE: this.window.hide(); break;
-			case app.enums.MESSAGE_TYPES.INPUT: app.keystrokeLauncherManager.input(message.value); break;
+			// case app.enums.MESSAGE_TYPES.INPUT: app.keystrokeLauncherManager.input(message.value); break;
 			default: break;
 		}
 	}
@@ -81,7 +83,6 @@ export default class ElectronManager extends ndapp.ApplicationComponent {
 		this.tray.setToolTip(`${app.name} v${app.version}`);
 
 		this.tray.on("click", () => {
-			console.log(this.window.isVisible(), this.window.isFocused());
 			// if (this.window.isVisible()) this.window.hide();
 			// else this.window.show();
 		});
@@ -110,7 +111,9 @@ export default class ElectronManager extends ndapp.ApplicationComponent {
 			skipTaskbar: true
 		};
 
-		if (app.isDevelopment) {
+		if (app.isDevelopment &&
+			DEBUG_FRAME
+		) {
 			browserWindowOptions.webPreferences.devTools = true;
 			browserWindowOptions.frame = true;
 			browserWindowOptions.width = 1024;
@@ -129,7 +132,6 @@ export default class ElectronManager extends ndapp.ApplicationComponent {
 
 		if (app.isDevelopment) {
 			this.window.webContents.openDevTools();
-			// this.window.removeMenu();
 		}
 
 		this.window.webContents.on("did-finish-load", () => {
@@ -144,7 +146,9 @@ export default class ElectronManager extends ndapp.ApplicationComponent {
 	updateActualWindowSize({ width, height }) {
 		app.log.info(`updateActualWindowSize ${width}x${height}`);
 
-		if (app.isDevelopment) return;
+		if (app.isDevelopment &&
+			DEBUG_FRAME
+		) return;
 
 		this.window.setBounds({ width, height }, false);
 	}

@@ -5,22 +5,20 @@
 	src: url("./fonts/RobotoMono-Regular.ttf") format("truetype");
 }
 
-$s: 18px;
+$s: 16px;
+$color-text-main: #4b4a4a;
+$color-text-tooltip: color.adjust($color-text-main, $lightness: +25%);
 
+* {
+	margin: 0;
+	padding: 0;
+}
+
+html,
 body {
 	font-family: "Roboto Mono", monospace;
 	font-size: $s;
-	line-height: 1.1;
-}
-
-.fill {
-	width: 100vw;
-	height: 100vh;
-}
-
-body,
-#root {
-	@extend .fill;
+	line-height: 1;
 }
 
 #root {
@@ -28,67 +26,100 @@ body,
 	overflow: hidden;
 }
 
+.flex {
+	display: flex;
+
+	&-fill {
+		flex: 1;
+	}
+
+	&-horizontal {
+		flex-direction: row;
+	}
+
+	&-vertical {
+		flex-direction: column;
+
+		&-items-center {
+			justify-content: center;
+		}
+	}
+}
+
 .keystroke {
 	&-container {
-		margin: auto;
-		margin-top: 5px;
+		margin: 5px;
+
 		box-shadow: 0px 0px 5px 1px #4C4C4C;
-		width: calc(100vw - 5px);
 	}
 
 	&-color {
-		color: #4b4a4a;
+		color: $color-text-main;
 	}
 
 	&-line {
 		@extend .keystroke-color;
 
+		padding: 5px;
+
 		border: 1px solid black;
 		border-radius: 0;
+
 		background-color: #d0d0d0;
-		color: #4b4a4a;
-		padding: 3px;
+		color: $color-text-main;
 
 		&-selected {
 			background-color: color.adjust(#d0d0d0, $lightness: -10%)
+		}
+
+		&-container {
+			position: relative;
 		}
 	}
 
 	&-input {
 		@extend .keystroke-color;
 
-		width: -webkit-fill-available;
 		border: none;
 		background: none;
 
+		margin: 0;
+		padding: 0;
+
 		&:focus {
 			outline: none;
+		}
+
+		&-result-tooltip {
+			position: absolute;
+			top: 0;
+			right: 0;
+
+			margin: 0;
+
+			color: $color-text-tooltip;
 		}
 	}
 
 	&-option {
 		border-top: none;
-		display: flex;
 		user-select: none;
 
 		&-icon {
-			margin-right: 6px;
-			flex: 0 0 $s * 2;
-			height: $s * 2;
+			height: 1.6rem;
+
+			margin-right: 5px;
+
 			border-radius: 5px;
 			border: solid 1px;
 
 			img {
 				width: 100%;
+				height: 100%;
 			}
 		}
 
 		&-text-container {
-			flex: 1;
-			display: flex;
-			flex-direction: column;
-			justify-content: space-around;
-			height: $s * 2;
 			overflow: auto;
 		}
 
@@ -101,13 +132,13 @@ body,
 		&-caption {
 			@extend .keystroke-option-text;
 
-			font-size: 1em;
+			font-size: 1rem;
 		}
 
 		&-description {
 			@extend .keystroke-option-text;
 
-			font-size: 0.75em;
+			font-size: 0.75rem;
 		}
 	}
 }
