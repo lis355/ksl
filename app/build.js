@@ -1,10 +1,10 @@
-const { spawn } = require("child_process");
+import { spawn } from "node:child_process";
 
-const ndapp = require("ndapp");
-const builder = require("electron-builder");
-const { parse } = require("shell-quote");
+import ndapp from "ndapp";
+import builder from "electron-builder";
+import { parse } from "shell-quote";
 
-const info = require("./package.json");
+const { name, version } = fs.readJsonSync("./package.json");
 
 function clearDirSync(dir) {
 	app.fs.removeSync(dir);
@@ -74,7 +74,7 @@ class App extends ndapp.Application {
 
 	async buildLauncherUI() {
 		await executeShellCommand({
-			cmd: "yarn run build-electron",
+			cmd: "yarn run ui-build",
 			cwd: this.rendererDirectory,
 			onStdOutData: data => {
 				app.log.info(data.toString());

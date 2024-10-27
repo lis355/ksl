@@ -1,6 +1,6 @@
-const { globalShortcut } = require("electron");
+import { globalShortcut } from "electron";
 
-module.exports = class HotkeysManager extends ndapp.ApplicationComponent {
+export default class HotkeysManager extends ndapp.ApplicationComponent {
 	async initialize() {
 		await super.initialize();
 

@@ -1,6 +1,9 @@
 {
 	"folders": [
 		{
+			"path": "common"
+		},
+		{
 			"path": "app"
 		},
 		{
@@ -11,7 +14,6 @@
 		"search.exclude": {
 			"**/build": true,
 			"**/buildfiles": true
-		},
-		"git.ignoreLimitWarning": true
+		}
 	}
 }

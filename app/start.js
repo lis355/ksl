@@ -1,17 +1,41 @@
-const ndapp = require("ndapp");
+import dayjs from "dayjs";
+import fs from "fs-extra";
 
-const components = [
-	() => new (require("./components/UserDataManager"))(),
-	() => new (require("./components/AssetsManager"))(),
-	() => new (require("./components/LocalDbManager"))(),
-	() => new (require("./components/OptionsManager"))(),
-	() => new (require("./components/IconsManager"))(),
-	() => new (require("./components/NotificationManager"))(),
-	() => new (require("./components/KeystrokeLauncherManager"))(),
-	() => new (require("./components/ElectronManager"))(),
-	() => new (require("./components/HotkeysManager"))(),
-	() => new (require("./components/ScriptsManager"))()
-];
+import ndapp from "../common/libraries/ndapp/index.js";
+
+import AssetsManager from "./components/AssetsManager.js";
+import ElectronManager from "./components/ElectronManager.js";
+import HotkeysManager from "./components/HotkeysManager.js";
+import IconsManager from "./components/IconsManager.js";
+import KeystrokeLauncherManager from "./components/KeystrokeLauncherManager.js";
+import LocalDbManager from "./components/LocalDbManager.js";
+import NotificationManager from "./components/NotificationManager.js";
+import OptionsManager from "./components/OptionsManager.js";
+import PluginsManager from "./components/PluginsManager.js";
+import UserDataManager from "./components/UserDataManager.js";
+
+import MESSAGE_TYPES from "../common/enums/messageTypes.js";
+
+import events from "./events/index.js";
+
+// import * as enums from "./enums/index.js";
+// import commonEnums from "../common/enums/index.js";
+// import commonTools from "../common/tools/index.js";
+// import tools from "./tools/index.js";
+
+const { name, version } = fs.readJsonSync("./package.json");
+
+const CWD = process.cwd();
+const DEVELOPER_ENVIRONMENT = process.env.DEVELOPER_ENVIRONMENT === "true";
+
+const LOG_DIRECTORY = ndapp.path.join(CWD, "logs");
+const LOG_PATH = ndapp.path.join(LOG_DIRECTORY, dayjs().format("DD-MM-YYYY HH-mm-ss") + ".txt");
+
+const LOCAL_APP_DATA_PATH = ndapp.path.join(process.env.LOCALAPPDATA, name);
+// const USER_DATA_PATH = ndapp.path.join(CWD, "userData");
+const USER_DATA_PATH = ndapp.path.join(LOCAL_APP_DATA_PATH, "userData");
+
+fs.ensureDirSync(LOG_DIRECTORY);
 
 class AppManager extends ndapp.Application {
 	constructor() {
@@ -34,6 +58,21 @@ class AppManager extends ndapp.Application {
 		return this.localDbManager.db;
 	}
 
+	get isDevelopment() {
+		return DEVELOPER_ENVIRONMENT;
+	}
+
+	async initialize() {
+		fs.ensureDirSync(LOCAL_APP_DATA_PATH);
+		fs.ensureDirSync(USER_DATA_PATH);
+
+		app.log.info(`${name} v${version}`);
+		app.log.info(`LOCAL_APP_DATA_PATH ${LOCAL_APP_DATA_PATH}`);
+		app.log.info(`USER_DATA_PATH ${USER_DATA_PATH}`);
+
+		await super.initialize();
+	}
+
 	async run() {
 		await super.run();
 
@@ -43,27 +82,41 @@ class AppManager extends ndapp.Application {
 	}
 }
 
-const DEVELOPER_ENVIRONMENT = Boolean(process.env.DEVELOPER_ENVIRONMENT);
-const CWD = process.cwd();
-
-global.isDevelopment = DEVELOPER_ENVIRONMENT;
-
 ndapp({
 	app: new AppManager(),
-	components,
-	libs: {},
+	components: [
+		() => new UserDataManager(),
+		() => new AssetsManager(),
+		() => new LocalDbManager(),
+		() => new OptionsManager(),
+		() => new IconsManager(),
+		() => new NotificationManager(),
+		() => new KeystrokeLauncherManager(),
+		() => new ElectronManager(),
+		() => new HotkeysManager(),
+		() => new PluginsManager()
+	],
+	log: {
+		file: LOG_PATH
+	},
 	enums: {
-		MESSAGE_TYPES: require("./constants/messageTypes")
+		MESSAGE_TYPES
 	},
 	constants: {
-		DEVELOPER_ENVIRONMENT,
-		CWD
+		CWD,
+		USER_DATA_PATH,
+		LOCAL_APP_DATA_PATH
+	},
+	libs: {
+	},
+	tools: {
+		// ...commonTools,
+		// ...tools
 	},
 	specials: {
-		info: require("./package.json"),
-		events: require("./events")
-	},
-	log: {
-		file: DEVELOPER_ENVIRONMENT ? false : ndapp.path.join(CWD, "log.txt")
+		name,
+		version,
+
+		events
 	}
 });

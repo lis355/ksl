@@ -1,10 +1,10 @@
-const Shell = require("node-powershell");
+import Shell from "node-powershell";
 
 function convertPathToWindowsStyle(path) {
 	return app.path.join(path);
 }
 
-module.exports = class IconsManager extends ndapp.ApplicationComponent {
+export default class IconsManager extends ndapp.ApplicationComponent {
 	async initialize() {
 		await super.initialize();
 

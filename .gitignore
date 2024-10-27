@@ -1,9 +1,9 @@
 node_modules/
 yarn.lock
-
-build/
-
 .env.*
 
+logs/
 userData/
 
+build/
+buildfiles/

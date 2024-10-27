@@ -1,6 +1,6 @@
-const { Notification } = require("electron");
+import { Notification } from "electron";
 
-module.exports = class NotificationManager extends ndapp.ApplicationComponent {
+export default class NotificationManager extends ndapp.ApplicationComponent {
 	showNotification(text) {
 		const notification = {
 			title: "Keystroke launcher",

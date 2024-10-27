@@ -1,32 +1,27 @@
-const { app: electronApp, Tray, Menu, BrowserWindow, screen, shell } = require("electron");
-const { ipcMain: ipc } = require("electron-better-ipc");
+import { app as electronApp, Tray, Menu, BrowserWindow, screen, shell, ipcMain } from "electron";
 
-const { MESSAGE_TYPES } = app.enums;
-
-module.exports = class ElectronManager extends ndapp.ApplicationComponent {
+export default class ElectronManager extends ndapp.ApplicationComponent {
 	async initialize() {
 		await super.initialize();
 
-		// electronApp.commandLine.appendSwitch("wm-window-animations-disabled");
+		electronApp.commandLine.appendSwitch("wm-window-animations-disabled");
 
 		electronApp.whenReady().then(this.handleElectronReady.bind(this));
 	}
 
-	sendMessage(message, data = {}) {
-		if (global.isDevelopment) console.log("MAIN ElectronManager.sendMessage", message, data);
+	sendMessage(message) {
+		if (app.isDevelopment) app.log.info("MAIN ElectronManager.sendMessage", message);
 
-		ipc.callRenderer(this.window, "message", { message, data });
+		this.window.webContents.send("message", message);
 	}
 
-	handleMessage(data) {
-		if (global.isDevelopment) console.log("MAIN ElectronManager.handleMessage", data);
+	handleMessage(event, message) {
+		if (app.isDevelopment) app.log.info("MAIN ElectronManager.handleMessage", message);
 
-		this.sendMessage("handled", Date());
-
-		switch (data.message) {
-			case MESSAGE_TYPES.UPDATE_SIZE: this.updateActualWindowSize(data.data); break;
-			case MESSAGE_TYPES.HIDE: this.window.hide(); break;
-			case MESSAGE_TYPES.INPUT: break;
+		switch (message.message) {
+			case app.enums.MESSAGE_TYPES.UPDATE_SIZE: this.updateActualWindowSize(message); break;
+			case app.enums.MESSAGE_TYPES.HIDE: this.window.hide(); break;
+			case app.enums.MESSAGE_TYPES.INPUT: app.keystrokeLauncherManager.input(message.value); break;
 			default: break;
 		}
 	}
@@ -45,11 +40,11 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 		this.createTray();
 		this.createWindow();
 
-		ipc.answerRenderer(this.window, "message", this.handleMessage.bind(this));
+		ipcMain.on("message", this.handleMessage.bind(this));
 
-		if (app.constants.DEVELOPER_ENVIRONMENT) {
-			// this.window.loadURL("http://localhost:8000/");
-			this.window.loadFile(app.path.join(app.constants.CWD, "../ui/build/index.html"));
+		if (app.isDevelopment) {
+			this.window.loadURL("http://localhost:8000/");
+			// this.window.loadFile(app.path.join(app.constants.CWD, "../ui/build/index.html"));
 		} else {
 			this.window.loadFile("public/index.html");
 		}
@@ -62,7 +57,7 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 
 		const contextMenu = Menu.buildFromTemplate([
 			{
-				label: `${app.info.name} v${app.info.version}`,
+				label: `${app.name} v${app.version}`,
 				enabled: false
 			},
 			{
@@ -83,10 +78,12 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 		]);
 
 		this.tray.setContextMenu(contextMenu);
-		this.tray.setToolTip(`${app.info.name} v${app.info.version}`);
+		this.tray.setToolTip(`${app.name} v${app.version}`);
 
 		this.tray.on("click", () => {
-			this.showWindowIfNotVisible();
+			console.log(this.window.isVisible(), this.window.isFocused());
+			// if (this.window.isVisible()) this.window.hide();
+			// else this.window.show();
 		});
 	}
 
@@ -97,7 +94,6 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 			center: true,
 			maximizable: false,
 			minimizable: false,
-			width: 500,
 			resizable: false,
 			// https://github.com/electron/electron-quick-start/issues/463
 			// threhe are many problems with using electron in ui, now you cannot ust import it in beginning of file
@@ -114,26 +110,30 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 			skipTaskbar: true
 		};
 
-		if (app.constants.DEVELOPER_ENVIRONMENT) {
+		if (app.isDevelopment) {
 			browserWindowOptions.webPreferences.devTools = true;
 			browserWindowOptions.frame = true;
 			browserWindowOptions.width = 1024;
 			browserWindowOptions.alwaysOnTop = false;
+			browserWindowOptions.transparent = false;
 		}
 
 		this.window = new BrowserWindow(browserWindowOptions);
 
-		this.window.setBounds({ y: Math.floor(screen.getPrimaryDisplay().workAreaSize.height * 0.25) });
+		const primaryDisplay = screen.getPrimaryDisplay();
 
-		if (app.constants.DEVELOPER_ENVIRONMENT) {
+		this.window.setBounds({
+			y: Math.floor(primaryDisplay.workAreaSize.height * 0.25),
+			width: Math.floor(primaryDisplay.workAreaSize.width * 0.5)
+		}, false);
+
+		if (app.isDevelopment) {
 			this.window.webContents.openDevTools();
 			// this.window.removeMenu();
 		}
 
 		this.window.webContents.on("did-finish-load", () => {
-			if (app.constants.DEVELOPER_ENVIRONMENT) {
-				this.window.show();
-			}
+			if (app.isDevelopment) this.window.show();
 		});
 
 		this.window.on("blur", () => {
@@ -141,8 +141,12 @@ module.exports = class ElectronManager extends ndapp.ApplicationComponent {
 		});
 	}
 
-	updateActualWindowSize(clientSize) {
-		this.window.setBounds({ height: clientSize.height });
+	updateActualWindowSize({ width, height }) {
+		app.log.info(`updateActualWindowSize ${width}x${height}`);
+
+		if (app.isDevelopment) return;
+
+		this.window.setBounds({ width, height }, false);
 	}
 
 	showWindowIfNotVisible() {

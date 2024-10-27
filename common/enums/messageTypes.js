@@ -5,4 +5,4 @@ const MESSAGE_TYPES = new ndapp.enum([
 	"INPUT"
 ]);
 
-module.exports = MESSAGE_TYPES;
+export default MESSAGE_TYPES;

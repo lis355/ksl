@@ -1,4 +1,4 @@
-const path = require("path");
+const path from"node:path");
 
 const SOURCE_DIR = process.cwd();
 const BUILD_DIR = path.join(process.cwd(), "buildfiles");

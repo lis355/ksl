@@ -1,4 +1,4 @@
-module.exports = class LauncherPluginOption {
+export default class LauncherPluginOption {
 	constructor(plugin, input, title, description) {
 		this.plugin = plugin;
 		this.input = input;

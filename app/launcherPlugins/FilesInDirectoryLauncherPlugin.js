@@ -1,6 +1,6 @@
-const LauncherPlugin = require("./LauncherPlugin");
+import LauncherPlugin from "./LauncherPlugin.js";
 
-module.exports = class FilesInDirectoryLauncherPlugin extends LauncherPlugin {
+export default class FilesInDirectoryLauncherPlugin extends LauncherPlugin {
 	constructor(launcher, directory) {
 		super(launcher);
 

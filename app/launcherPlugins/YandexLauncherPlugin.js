@@ -1,10 +1,9 @@
-const querystring = require("querystring");
+import { shell } from "electron";
+import querystring from "querystring";
 
-const { shell } = require("electron");
+import LauncherPlugin from "./LauncherPlugin.js";
 
-const LauncherPlugin = require("./LauncherPlugin");
-
-module.exports = class GoogleLauncherPlugin extends LauncherPlugin {
+export default class GoogleLauncherPlugin extends LauncherPlugin {
 	async load() {
 		await super.load();
 

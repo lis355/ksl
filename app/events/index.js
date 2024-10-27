@@ -1,4 +1,4 @@
-const EventEmitter = require("events");
+import EventEmitter from "events";
 
 const eventEmitter = new EventEmitter();
 
@@ -9,4 +9,4 @@ const EVENT_TYPES = new ndapp.enum([
 
 eventEmitter.EVENT_TYPES = EVENT_TYPES;
 
-module.exports = eventEmitter;
+export default eventEmitter;

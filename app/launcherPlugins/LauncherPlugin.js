@@ -1,8 +1,8 @@
-const EventEmitter = require("events");
+import EventEmitter from "events";
 
-const LauncherPluginOption = require("./LauncherPluginOption");
+// import LauncherPluginOption from "./LauncherPluginOption";
 
-module.exports = class LauncherPlugin extends EventEmitter {
+export default class LauncherPlugin extends EventEmitter {
 	constructor(launcher) {
 		super();
 
@@ -15,6 +15,7 @@ module.exports = class LauncherPlugin extends EventEmitter {
 	abort() { }
 
 	emitOption(option) {
+		app.log.info("LauncherPlugin.emitOption", option);
 		// this.emit(LauncherPlugin.OPTION, new LauncherPluginOption(this, option));
 	}
 

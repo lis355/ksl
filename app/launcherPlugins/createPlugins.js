@@ -1,14 +1,16 @@
-const FilesInDirectoryLauncherPlugin = require("./FilesInDirectoryLauncherPlugin");
-const GoogleLauncherPlugin = require("./GoogleLauncherPlugin");
-const YandexLauncherPlugin = require("./YandexLauncherPlugin");
+import CalculatorLauncherPlugin from "./CalculatorLauncherPlugin.js";
+// import FilesInDirectoryLauncherPlugin from "./FilesInDirectoryLauncherPlugin.js";
+// import GoogleLauncherPlugin from "./GoogleLauncherPlugin.js";
+// import YandexLauncherPlugin from "./YandexLauncherPlugin.js";
 
-module.exports = function (launcher) {
-	const homeDirectory = app.os.homedir();
-	const desktopDirectory = app.path.join(homeDirectory, "Desktop");
+export default function (launcher) {
+	// const homeDirectory = app.os.homedir();
+	// const desktopDirectory = app.path.join(homeDirectory, "Desktop");
 
 	return [
-		new FilesInDirectoryLauncherPlugin(launcher, desktopDirectory),
-		new GoogleLauncherPlugin(launcher),
-		new YandexLauncherPlugin(launcher)
+		new CalculatorLauncherPlugin(launcher)
+		// new FilesInDirectoryLauncherPlugin(launcher, desktopDirectory),
+		// new GoogleLauncherPlugin(launcher),
+		// new YandexLauncherPlugin(launcher)
 	];
 };
