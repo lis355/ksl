@@ -1,3 +1,4 @@
+import _ from "lodash";
 import { app as electronApp, Tray, Menu, BrowserWindow, screen, shell, ipcMain } from "electron";
 
 const DEBUG_FRAME = false;
@@ -9,23 +10,6 @@ export default class ElectronManager extends ndapp.ApplicationComponent {
 		electronApp.commandLine.appendSwitch("wm-window-animations-disabled");
 
 		electronApp.whenReady().then(this.handleElectronReady.bind(this));
-	}
-
-	sendMessage(message) {
-		if (app.isDevelopment) app.log.info("MAIN ElectronManager.sendMessage", message);
-
-		this.window.webContents.send("message", message);
-	}
-
-	handleMessage(event, message) {
-		if (app.isDevelopment) app.log.info("MAIN ElectronManager.handleMessage", message);
-
-		switch (message.message) {
-			case app.enums.MESSAGE_TYPES.UPDATE_SIZE: this.updateActualWindowSize(message); break;
-			case app.enums.MESSAGE_TYPES.HIDE: this.window.hide(); break;
-			// case app.enums.MESSAGE_TYPES.INPUT: app.keystrokeLauncherManager.input(message.value); break;
-			default: break;
-		}
 	}
 
 	handleElectronReady() {
@@ -82,10 +66,11 @@ export default class ElectronManager extends ndapp.ApplicationComponent {
 		this.tray.setContextMenu(contextMenu);
 		this.tray.setToolTip(`${app.name} v${app.version}`);
 
-		this.tray.on("click", () => {
-			// if (this.window.isVisible()) this.window.hide();
-			// else this.window.show();
-		});
+		this.tray
+			.on("click", () => {
+				// if (this.window.isVisible()) this.window.hide();
+				// else this.window.show();
+			});
 	}
 
 	createWindow() {
@@ -130,21 +115,49 @@ export default class ElectronManager extends ndapp.ApplicationComponent {
 			width: Math.floor(primaryDisplay.workAreaSize.width * 0.5)
 		}, false);
 
-		if (app.isDevelopment) {
-			this.window.webContents.openDevTools();
-		}
+		this.window.webContents
+			.on("did-finish-load", () => {
+				if (app.isDevelopment) {
+					this.window.webContents.openDevTools();
 
-		this.window.webContents.on("did-finish-load", () => {
-			if (app.isDevelopment) this.window.show();
-		});
+					this.window.show();
+				}
+			});
 
-		this.window.on("blur", () => {
-			this.window.hide();
-		});
+		this.window
+			.on("blur", () => {
+				this.window.hide();
+			});
 	}
 
-	updateActualWindowSize({ width, height }) {
-		app.log.info(`updateActualWindowSize ${width}x${height}`);
+	sendMessage(message, data = {}) {
+		// if (app.isDevelopment) app.log.info("MAIN ElectronManager.sendMessage", message);
+
+		this.window.webContents.send("message", { message, ...data });
+	}
+
+	sendQueryOption(queryOption) {
+		// if (app.isDevelopment) app.log.info("MAIN ElectronManager.sendQueryOption", queryOption);
+
+		this.sendMessage(app.enums.MESSAGE_TYPES.QUERY_OPTION, queryOption);
+	}
+
+	handleMessage(event, message) {
+		// if (app.isDevelopment) app.log.info("MAIN ElectronManager.handleMessage", JSON.stringify(message));
+
+		const data = _.omit(message, ["message"]);
+
+		switch (message.message) {
+			case app.enums.MESSAGE_TYPES.UPDATE_SIZE: this.updateActualWindowSize(data.width, data.height); break;
+			case app.enums.MESSAGE_TYPES.HIDE: this.window.hide(); break;
+			case app.enums.MESSAGE_TYPES.EXECUTE: app.keystrokeLauncherManager.execute(data); break;
+			case app.enums.MESSAGE_TYPES.INPUT: app.keystrokeLauncherManager.input(data.input); break;
+			default: break;
+		}
+	}
+
+	updateActualWindowSize(width, height) {
+		// app.log.info(`updateActualWindowSize ${width}x${height}`);
 
 		if (app.isDevelopment &&
 			DEBUG_FRAME

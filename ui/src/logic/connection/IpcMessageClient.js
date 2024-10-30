@@ -12,8 +12,7 @@ export default class IpcMessageClient extends MessageClient {
 		this.ipcRenderer = ipcRenderer;
 
 		this.ipcRenderer.on("message", (event, message) => {
-			// if (window.isDevelopment)
-			console.log("UI IpcMessageClient.handleMessage", message);
+			// console.log("UI IpcMessageClient.handleMessage", message);
 
 			this.events.emit("message", message);
 		});
@@ -28,8 +27,7 @@ export default class IpcMessageClient extends MessageClient {
 	}
 
 	sendMessage(message) {
-		// if (window.isDevelopment)
-		console.log("UI IpcMessageClient.sendMessage", message);
+		// console.log("UI IpcMessageClient.sendMessage", message);
 
 		this.ipcRenderer.send("message", message);
 	}

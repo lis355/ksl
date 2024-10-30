@@ -1,4 +1,4 @@
-import Shell from "node-powershell";
+import { PowerShell } from "node-powershell";
 
 function convertPathToWindowsStyle(path) {
 	return app.path.join(path);
@@ -11,42 +11,45 @@ export default class IconsManager extends ndapp.ApplicationComponent {
 		app.fs.ensureDirSync(app.userDataManager.tempPath());
 	}
 
-	async getIconByFilePathInBase64(filePath) {
+	async extractIconFromFile(filePath) {
 		const filePathHash = app.tools.hash(filePath);
-		let dbPath = `cache.icons.${filePathHash}`;
+		const dbPath = `cache.icons.${filePathHash}`;
 		let icon = app.db.get(dbPath, null).value();
 		if (icon) return icon;
 
-		const ps = new Shell({
+		const ps = new PowerShell({
 			executionPolicy: "Bypass",
 			noProfile: true
 		});
 
 		const tempIconPngPath = app.userDataManager.tempPath(`${filePathHash}.png`);
 
-		const cmd = `
+		const cmd = PowerShell.command`
 		Add-Type -AssemblyName System.Drawing;
 		$Icon = [System.Drawing.Icon]::ExtractAssociatedIcon("${convertPathToWindowsStyle(filePath)}").ToBitmap().Save("${convertPathToWindowsStyle(tempIconPngPath)}");
 		`;
 
-		ps.addCommand(cmd);
-
 		try {
-			await ps.invoke();
+			const result = await ps.invoke(cmd);
+			if (result.stderr) throw new Error(result.stderr);
 
-			icon = this.loadPngIconInBase64(tempIconPngPath);
+			icon = this.loadPngImageInBase64(tempIconPngPath);
 			app.db.set(dbPath, icon).write();
 			app.fs.removeSync(tempIconPngPath);
 		} catch (error) {
-			app.log.error(error);
-
+			throw error;
+		} finally {
 			ps.dispose();
 		}
 
 		return icon;
 	}
 
-	loadPngIconInBase64(filePath) {
+	loadPngImageInBase64(filePath) {
 		return app.fs.readFileSync(filePath, { encoding: "base64" });
+	}
+
+	loadIconFromFile(filePath) {
+		return this.loadPngImageInBase64(filePath);
 	}
 };

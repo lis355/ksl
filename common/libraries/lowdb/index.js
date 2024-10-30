@@ -43,7 +43,7 @@ export class JsonFileSync extends FileSync {
 	constructor(source, options) {
 		options = options || {};
 
-		lodash.set(options, "serialize", data => JSON.stringify(data, null, 2));
+		lodash.set(options, "serialize", data => JSON.stringify(data, null, "\t"));
 		lodash.set(options, "deserialize", data => JSON.parse(data));
 
 		super(source, options);

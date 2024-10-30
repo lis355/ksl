@@ -4,20 +4,27 @@ export default class PluginsManager extends ndapp.ApplicationComponent {
 	async initialize() {
 		await super.initialize();
 
+		this.plugins = [];
+
 		await this.createPlugins();
 
 		app.events.on(app.events.EVENT_TYPES.ELECTRON_APP_READY, this.handleElectronAppReady.bind(this));
 	}
 
 	async createPlugins() {
-		this.plugins = createPlugins(this);
+		const plugins = createPlugins(this);
 
-		await Promise.all(this.plugins.map(async plugin => plugin.load()));
+		await Promise.all(plugins.map(async plugin => plugin.load()));
 
-		// this.plugins.forEach(plugin => { plugin.on(LauncherPlugin.OPTION, this.handlePluginOption.bind(this)); });
+		for (const plugin of plugins) this.addPlugin(plugin);
 	}
 
 	async handleElectronAppReady() {
+		// TODO
+		// await this.createUserPlugins();
+	}
+
+	async createUserPlugins() {
 		const optionsFileDirectory = app.path.dirname(app.optionsManager.optionsFilePath);
 		for (const pluginOptions of app.optionsManager.options.plugins) {
 			const pluginDirectory = app.path.resolve(optionsFileDirectory, pluginOptions.directory);
@@ -42,15 +49,11 @@ export default class PluginsManager extends ndapp.ApplicationComponent {
 				if (plugin.load) await plugin.load();
 
 				app.log.info(`[PluginsManager]: plugin at ${pluginDirectory} loaded`);
-
-				// DEBUG
-				const result = await plugin.execute();
-				app.log.info(`[PluginsManager]: plugin executed ${result}`);
 			} catch (error) {
 				app.log.error(`[PluginsManager]: plugin can't load at ${pluginDirectory} with error: ${error.stack}`);
 			}
 
-			this.plugins.push(plugin);
+			this.addPlugin(plugin);
 
 			// if (pluginOptions.hotkey) {
 			// 	app.hotkeysManager.register(pluginOptions.hotkey, () => {
@@ -60,8 +63,9 @@ export default class PluginsManager extends ndapp.ApplicationComponent {
 		}
 	}
 
-	// TODO refactor
-	input(str) {
-		this.plugins.forEach(plugin => { plugin.input(str); });
+	addPlugin(plugin) {
+		plugin.index = this.plugins.length;
+
+		this.plugins.push(plugin);
 	}
 };

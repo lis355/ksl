@@ -1,14 +1,30 @@
+import Query from "./queries/Query.js";
 
 export default class KeystrokeLauncherManager extends ndapp.ApplicationComponent {
-	input(str) {
-		this.currentInput = str;
+	async initialize() {
+		await super.initialize();
 
-		app.pluginsManager.input(this.currentInput);
+		this.handlePluginQueryOption = this.handlePluginQueryOption.bind(this);
 	}
 
-	handlePluginOption(option) {
-		// if (option.input !== this.currentInput) return;
+	input(str) {
+		this.currentQuery = new Query(str);
 
-		// this.emit(LauncherPlugin.OPTION, option);
+		app.pluginsManager.plugins.forEach(plugin => plugin.query(this.currentQuery, this.handlePluginQueryOption));
+	}
+
+	handlePluginQueryOption(plugin, queryOption) {
+		if (!this.currentQuery ||
+			this.currentQuery.id !== queryOption.query.id) return;
+
+		queryOption.pluginId = plugin.index;
+
+		app.electronManager.sendQueryOption(queryOption);
+	}
+
+	execute(queryOption) {
+		const plugin = app.pluginsManager.plugins[queryOption.pluginId];
+
+		plugin.execute(queryOption);
 	}
 };

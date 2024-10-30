@@ -1,5 +1,6 @@
-import React from "react";
+import _ from "lodash";
 import classnames from "classnames";
+import React from "react";
 
 // TODO refactor and use
 // import MESSAGE_TYPES from "../../../common/enums/messageTypes.js";
@@ -7,12 +8,16 @@ const MESSAGE_TYPES = {
 	UPDATE_SIZE: "UPDATE_SIZE",
 	HIDE: "HIDE",
 	EXECUTE: "EXECUTE",
-	INPUT: "INPUT"
+	INPUT: "INPUT",
+
+	QUERY_OPTION: "QUERY_OPTION"
 };
 
 function getPngSrcDataFromBase64String(base64String) {
 	return "data:image/png;base64," + base64String;
 }
+
+const MESSAGE_INPUT_DEBOUNCE_DELAY_IN_MILLISECONDS = 200;
 
 export default class App extends React.Component {
 	constructor() {
@@ -23,7 +28,9 @@ export default class App extends React.Component {
 		this.selectOptionIndex = this.selectOptionIndex.bind(this);
 		this.handleInputChange = this.handleInputChange.bind(this);
 		this.handleKeyDown = this.handleKeyDown.bind(this);
-		this.handleMessage = this.handleMessageClientMessage.bind(this);
+		this.handleMessageClientMessage = this.handleMessageClientMessage.bind(this);
+
+		this.sendMesageInput = _.debounce(this.sendMesageInput, MESSAGE_INPUT_DEBOUNCE_DELAY_IN_MILLISECONDS);
 	}
 
 	state = {
@@ -52,27 +59,26 @@ export default class App extends React.Component {
 			case "ArrowUp":
 				this.selectPrevious();
 				event.preventDefault();
+
 				break;
 
 			case "Tab":
 			case "ArrowDown":
 				this.selectNext();
 				event.preventDefault();
+
 				break;
 
 			case "Enter":
-				const input = this.state.input.trim();
-				if (input) {
-					this.sendMessage(MESSAGE_TYPES.EXECUTE, {
-						input
-					});
-				}
+				if (this.state.optionSeletedIndex >= 0) this.sendMessage(MESSAGE_TYPES.EXECUTE, _.pick(this.state.options[this.state.optionSeletedIndex], "query", "text", "pluginId"));
 
 				this.clearInputAndHide();
+
 				break;
 
 			case "Escape":
 				this.clearInputAndHide();
+
 				break;
 
 			default:
@@ -81,6 +87,14 @@ export default class App extends React.Component {
 	}
 
 	handleMessageClientMessage(message) {
+		switch (message.message) {
+			case MESSAGE_TYPES.QUERY_OPTION:
+				this.handleQueryOption(message, _.omit(message, ["message"]));
+				break;
+
+			default:
+				break;
+		}
 	}
 
 	handleInputChange(event) {
@@ -89,25 +103,27 @@ export default class App extends React.Component {
 
 		this.setState({
 			input,
-			tooltip: "will be tooltip",
+			tooltip: "",
+			options: [],
 			optionSeletedIndex: -1
 		}, () => {
-			this.sendMessage(MESSAGE_TYPES.INPUT, {
-				input: this.state.input
-			});
+			this.sendMesageInput();
+		});
+	}
 
-			const options = [];
-			for (let i = 0; i < this.state.input.length; i++) {
-				options.push({
-					caption: this.state.input.slice(0, i + 1),
-					description: "Start app ...",
-					icon: "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOnSURBVFhHxVVLSJRRGL2boFVQ0RN6bYJeSkVB1PyjzvgYR0nJLIRCeltCBi0qoqjI1NRe9sBFiwJbtGzRrm2REARFEBW0KYreUZSlX/fc6Qzf3Lmmm2px5nuf8937/z9jKisro6qqqv7q6mr5l4BmOp2Omf8hTtjD38UCLtB2uJxfsyfIy2l/uJz2swsAICR0E33G9H2gZk8VrBE+r+EptLhewAfzoX5Yv98H++m7BbC1LvAUOqbPPj2jwXzd6pTs2xBzvuZiD323gC6yQVv66PFz2jbUlsnZpuXSf3SmDFwwIpeMq4VADnyGOYVUKpVDypg+oPsb1ySlt3mJPGidJkMXM6IauhccOAQ5YXMW0OQU00uwvqO+WK62FMrT9vF5gj7Qj1nyah/ILkDBENK2vqchkut758uLrrFBoeFAjoqKiqwoYljkTHl5ebaJRRQ4cHP/XHl7Okw+EvBIyEdLDcJQjE1ciHGIeCQMWTxqnSTd25c5PnJpLeYMfohQQ0gghJ/2tPeOTZeepiXSUJPI48EihK65G+CpWaQtKysLiml8Omvk1sE5snNdlEOOWcQEebUP694BBroJGM0CGs86xtmvY4E0rY1nF4AlL3zmkYNvmCwtLc0WtQ0JjQYvu8ZIX8s8x+Hz0gcMhJFIJpNuCYINV3Yvkmft44Iio4EWJa/WMBBmE5J6EZ3bWBOX3l0F8vD4RPeWh8RC0Nzk1Dl3A4TejovpmLaxJpIbe2fJq87Mtx4SJvQcfQL8bgE4ukhhPVxfFZczWwvl9oHJ8rHLyIeTRt62G3ndauSdtV9OGRkMLOPz+DCJRCKviTmgc8tSeXR8ijvpkP2HGzxv5EePke/28/t2JiP8yd7EuzYjb05Y22Hkc7ft+/1vSD6AohruHdCCuhnWXXEAbhmLn3aZgXOZZb7aZT7b23lvl3hy2Ehf8+wcMc0PHzl3A0BJSYkDYw6FxDXczVhgmedtY+Vay3zZWbdCEpYL8+QjqEMYPwFwAfghUY3HrRPk8q6FsqlmZXZOi9FnzFxxcbGz7hEgiQQtfcAXxEnvH5kqPdsKZH16VQ655uC8rusc/Zwb0IOMITpgX7w7h2ZI5+bFUpuK8oRgARIXFRVlOf4EzBgOE35DS/1yqUxmRCkACxHOwPdjWHLomDn6BkXdqIGcJtDQPdr6OS3q1wD3CDioC7rRr/t9OqdrnNHwa+4G/idMLBbrDxX+BeLx+F0TRVEMTqjhbwKaURTFfgHGyuzIK2IIFAAAAABJRU5ErkJggg==",
-				});
-			}
+	handleQueryOption(queryOption) {
+		const options = Array.from(this.state.options);
+		let optionSeletedIndex = this.state.optionSeletedIndex;
 
-			this.setState({ options }, () => {
-				this.sendMessageUpdateSize();
-			});
+		options.push(queryOption);
+
+		if (options.length === 1) optionSeletedIndex = 0;
+
+		this.setState({
+			options,
+			optionSeletedIndex
+		}, () => {
+			this.sendMessageUpdateSize();
 		});
 	}
 
@@ -120,7 +136,9 @@ export default class App extends React.Component {
 	}
 
 	selectOptionIndex(index) {
-		this.setState({ optionSeletedIndex: index % this.state.options.length });
+		this.setState({
+			optionSeletedIndex: index % this.state.options.length
+		});
 	}
 
 	clearInputAndHide() {
@@ -148,6 +166,16 @@ export default class App extends React.Component {
 			width: rectangle.width,
 			height: rectangle.height
 		});
+	}
+
+	sendMesageInput() {
+		const input = this.state.input.trim();
+
+		if (input) {
+			this.sendMessage(MESSAGE_TYPES.INPUT, {
+				input
+			});
+		}
 	}
 
 	render() {
@@ -186,11 +214,11 @@ class Keystroke extends React.Component {
 						</p>
 					</div>
 				</div>
-				{this.props.options.map((option, index) =>
+				{this.props.options.map((queryOption, index) =>
 					<KeystrokeOption key={index}
-						caption={option.caption}
-						description={option.description}
-						icon={option.icon}
+						caption={queryOption.text}
+						description={_.get(queryOption, "meta.description")}
+						icon={_.get(queryOption, "meta.icon")}
 
 						selected={index === this.props.optionSeletedIndex}
 						handleMouseMove={() => this.props.selectOptionIndex(index)}
@@ -214,7 +242,9 @@ class KeystrokeOption extends React.Component {
 				}
 				<div className="keystroke-option-text-container flex flex-vertical flex-vertical-items-center">
 					<p className="keystroke-option-caption">{this.props.caption}</p>
-					<p className="keystroke-option-description">{this.props.description}</p>
+					{this.props.description &&
+						<p className="keystroke-option-description">{this.props.description}</p>
+					}
 				</div>
 			</div>
 		);

@@ -1,4 +1,3 @@
-import dayjs from "dayjs";
 import fs from "fs-extra";
 
 import ndapp from "../common/libraries/ndapp/index.js";
@@ -18,10 +17,7 @@ import MESSAGE_TYPES from "../common/enums/messageTypes.js";
 
 import events from "./events/index.js";
 
-// import * as enums from "./enums/index.js";
-// import commonEnums from "../common/enums/index.js";
-// import commonTools from "../common/tools/index.js";
-// import tools from "./tools/index.js";
+import hash from "./tools/hash.js";
 
 const { name, version } = fs.readJsonSync("./package.json");
 
@@ -29,7 +25,7 @@ const CWD = process.cwd();
 const DEVELOPER_ENVIRONMENT = process.env.DEVELOPER_ENVIRONMENT === "true";
 
 const LOG_DIRECTORY = ndapp.path.join(CWD, "logs");
-const LOG_PATH = ndapp.path.join(LOG_DIRECTORY, dayjs().format("DD-MM-YYYY HH-mm-ss") + ".txt");
+const LOG_PATH = ndapp.path.join(LOG_DIRECTORY, /*dayjs().format("DD-MM-YYYY HH-mm-ss")*/"log" + ".txt");
 
 const LOCAL_APP_DATA_PATH = ndapp.path.join(process.env.LOCALAPPDATA, name);
 // const USER_DATA_PATH = ndapp.path.join(CWD, "userData");
@@ -76,9 +72,14 @@ class AppManager extends ndapp.Application {
 	async run() {
 		await super.run();
 
-		// app.log.info(await app.iconsManager.getIconInBase64(app.path.resolve(__dirname, "start.js")));
-
-		// app.keystrokeLauncherManager.input("s");
+		if (app.isDevelopment) {
+			try {
+				const onRunFilePath = app.path.join(CWD, "onRun.js");
+				if (app.fs.existsSync(onRunFilePath)) await import(`file://${onRunFilePath}`);
+			} catch (error) {
+				console.error(error);
+			}
+		}
 	}
 }
 
@@ -110,8 +111,7 @@ ndapp({
 	libs: {
 	},
 	tools: {
-		// ...commonTools,
-		// ...tools
+		hash
 	},
 	specials: {
 		name,

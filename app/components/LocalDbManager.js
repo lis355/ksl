@@ -8,9 +8,7 @@ export default class LocalDbManager extends ndapp.ApplicationComponent {
 
 		this.db = low(new JsonFileSync(app.userDataManager.userDataPath(DB_FILE_NAME)));
 		this.db
-			.defaultsDeep({
-				cache: {}
-			})
+			.defaultsDeep({})
 			.write();
 	}
 };
