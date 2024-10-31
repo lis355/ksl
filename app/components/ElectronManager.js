@@ -2,6 +2,7 @@ import _ from "lodash";
 import { app as electronApp, Tray, Menu, BrowserWindow, screen, shell, ipcMain } from "electron";
 
 const DEBUG_FRAME = false;
+const DEBUG_DEV_SERVER = false;
 
 export default class ElectronManager extends ndapp.ApplicationComponent {
 	async initialize() {
@@ -29,10 +30,19 @@ export default class ElectronManager extends ndapp.ApplicationComponent {
 		ipcMain.on("message", this.handleMessage.bind(this));
 
 		if (app.isDevelopment) {
-			this.window.loadURL("http://localhost:8000/");
-			// this.window.loadFile(app.path.join(app.constants.CWD, "../ui/build/index.html"));
+			if (DEBUG_DEV_SERVER) {
+				const url = "http://localhost:8000/";
+				this.window.loadURL(url);
+				app.log.info(`[ElectronManager]: window loadURL at ${url}`);
+			} else {
+				const filePath = app.path.join(app.constants.CWD, "../ui/build/index.html");
+				app.log.info("[ElectronManager]: window loadFile at ", filePath);
+				this.window.loadFile(filePath);
+			}
 		} else {
-			this.window.loadFile("public/index.html");
+			const filePath = app.path.join(app.constants.ELECTRON_APP_PATH, "public", "index.html");
+			app.log.info("[ElectronManager]: window loadFile at ", filePath);
+			this.window.loadFile(filePath);
 		}
 
 		app.events.emit(app.events.EVENT_TYPES.ELECTRON_APP_READY);

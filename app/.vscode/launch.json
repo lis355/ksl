@@ -25,6 +25,9 @@
 		{
 			"type": "node",
 			"request": "launch",
+			"runtimeArgs": [
+				"--trace-warnings"
+			],
 			"name": "build",
 			"program": "${workspaceFolder}/build.js",
 			"cwd": "${workspaceFolder}",

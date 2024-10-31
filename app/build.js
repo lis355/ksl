@@ -1,15 +1,12 @@
 import { spawn } from "node:child_process";
 
-import ndapp from "ndapp";
-import builder from "electron-builder";
+import _ from "lodash";
 import { parse } from "shell-quote";
+import builder from "electron-builder";
+import fs from "fs-extra";
 
-const { name, version } = fs.readJsonSync("./package.json");
-
-function clearDirSync(dir) {
-	app.fs.removeSync(dir);
-	app.fs.ensureDirSync(dir);
-}
+import clearDirSync from "../common/tools/clearDirSync.js";
+import ndapp from "../common/libraries/ndapp/index.js";
 
 async function executeShellCommand({ cmd, cwd, env, onStdOutData, onStdErrData, onExit }) {
 	return new Promise(resolve => {
@@ -50,11 +47,9 @@ class App extends ndapp.Application {
 
 		await this.buildLauncherBundle();
 		await this.buildLauncherUI();
+		this.copyAssets();
 		this.createPackageFile();
 		await this.buildElectron();
-		this.copyAssets();
-
-		app.log.info(`Build ${info.name} v${info.version} successful`);
 	}
 
 	async buildLauncherBundle() {
@@ -88,19 +83,21 @@ class App extends ndapp.Application {
 	}
 
 	copyAssets() {
-		app.fs.copySync(app.path.join(this.mainDirectory, "assets"), app.path.join(this.buildDirectory, "win-unpacked", "assets"));
+		app.fs.copySync(app.path.join(this.mainDirectory, "assets"), app.path.join(this.buildFilesDirectory, "assets"));
 	}
 
 	createPackageFile() {
-		const packageFile = app.libs._.omit(info, "build", "dependencies", "devDependencies");
+		const packageFile = fs.readJsonSync("./package.json");
+		const packageInfo = _.omit(packageFile, "build", "type", "scripts", "dependencies", "devDependencies");
+		packageInfo.main = "app.bundle.js";
+		packageInfo.description = packageInfo.name;
 
-		packageFile.main = "app.bundle.js";
-
-		app.tools.json.save(app.path.join(this.buildFilesDirectory, "package.json"), packageFile);
+		fs.writeJsonSync(app.path.join(this.buildFilesDirectory, "package.json"), packageInfo);
 	}
 
 	async buildElectron() {
 		const buildResult = await builder.build();
+
 		app.log.info(buildResult.join(app.os.EOL));
 	}
 }

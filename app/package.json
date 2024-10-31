@@ -9,14 +9,16 @@
 	},
 	"type": "module",
 	"main": "start.js",
+	"scripts": {
+		"app-build": "yarn run webpack --config webpack.config.js"
+	},
 	"build": {
 		"productName": "ksl",
 		"artifactName": "${productName}.${ext}",
-		"asar": true,
+		"asar": false,
 		"win": {
-			"target": [
-				"portable"
-			]
+			"icon": "assets/icon.ico",
+			"target": "portable"
 		},
 		"directories": {
 			"buildResources": "buildfiles",

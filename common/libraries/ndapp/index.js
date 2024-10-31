@@ -68,10 +68,6 @@ class Application {
 		this.exit(code);
 	}
 
-	get time() {
-		return moment();
-	}
-
 	exit(code = 0) {
 		process.exit(code);
 	}

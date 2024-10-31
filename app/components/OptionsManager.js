@@ -11,6 +11,9 @@ export default class OptionsManager extends ndapp.ApplicationComponent {
 	async initialize() {
 		await super.initialize();
 
+		const optionsFilePath = this.optionsFilePath;
+		app.log.info(`[OptionsManager]: optionsFilePath ${optionsFilePath}`);
+
 		let success = false;
 		if (app.fs.existsSync(this.optionsFilePath)) {
 			try {
@@ -29,9 +32,7 @@ export default class OptionsManager extends ndapp.ApplicationComponent {
 	}
 
 	get optionsFilePath() {
-		const directory = app.isDevelopment ? app.userDataManager.userDataPath() : app.constants.CWD;
-
-		return app.path.join(directory, "options.json");
+		return app.path.join(app.userDataManager.userDataPath(), "options.json");
 	}
 
 	save() {

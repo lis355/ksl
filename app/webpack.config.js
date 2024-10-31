@@ -1,4 +1,4 @@
-const path from"node:path");
+import path from "node:path";
 
 const SOURCE_DIR = process.cwd();
 const BUILD_DIR = path.join(process.cwd(), "buildfiles");
@@ -20,7 +20,10 @@ const config = {
 	],
 	optimization: {
 		minimize: false
+	},
+	stats: {
+		errorDetails: true
 	}
 };
 
-module.exports = config;
+export default config;
