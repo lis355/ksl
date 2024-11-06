@@ -1,17 +1,15 @@
 import _ from "lodash";
 import classnames from "classnames";
+import Enum from "@lis355/enumjs";
 import React from "react";
 
-// TODO refactor and use
-// import MESSAGE_TYPES from "../../../common/enums/messageTypes.js";
-const MESSAGE_TYPES = {
-	UPDATE_SIZE: "UPDATE_SIZE",
-	HIDE: "HIDE",
-	EXECUTE: "EXECUTE",
-	INPUT: "INPUT",
-
-	QUERY_OPTION: "QUERY_OPTION"
-};
+const MESSAGE_TYPES = new Enum([
+	"UPDATE_SIZE",
+	"HIDE",
+	"EXECUTE",
+	"INPUT",
+	"QUERY_OPTION"
+]);
 
 function getPngSrcDataFromBase64String(base64String) {
 	return "data:image/png;base64," + base64String;

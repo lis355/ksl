@@ -27,16 +27,17 @@
 		}
 	},
 	"dependencies": {
+		"@lis355/enumjs": "^1.0.1",
+		"ansi-escape-sequences": "^6.2.3",
 		"dayjs": "^1.11.13",
 		"electron": "^33.0.2",
 		"lodash": "^4.17.21",
 		"mathjs": "^13.2.0",
-		"node-powershell": "^5.0.1"
+		"node-powershell": "^5.0.1",
+		"stack-trace": "^1.0.0-pre2"
 	},
 	"devDependencies": {
-		"@babel/eslint-parser": "^7.23.3",
 		"electron-builder": "^25.1.8",
-		"eslint": "^8.54.0",
 		"shell-quote": "^1.8.1",
 		"webpack": "^5.95.0",
 		"webpack-cli": "^5.1.4"

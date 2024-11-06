@@ -1,19 +1,55 @@
+import path from "node:path";
+
 import _ from "lodash";
 import { app as electronApp, Tray, Menu, BrowserWindow, screen, shell, ipcMain } from "electron";
+import Enum from "@lis355/enumjs";
+
+const MESSAGE_TYPES = new Enum([
+	"UPDATE_SIZE",
+	"HIDE",
+	"EXECUTE",
+	"INPUT",
+	"QUERY_OPTION"
+]);
+
+const EVENT_TYPES = new Enum([
+	"ELECTRON_APP_READY",
+	"ELECTRON_APP_WILL_CLOSE"
+]);
+
+import ApplicationComponent from "./ApplicationComponent.js";
+import OptionsManager from "./OptionsManager.js";
+
+import {
+	APPLICATION_NAME,
+	APPLICATION_VERSION,
+	CWD,
+	ELECTRON_APP_PATH
+} from "../constants.js";
+
+import log from "../log.js";
 
 const DEBUG_FRAME = false;
-const DEBUG_DEV_SERVER = false;
+const DEBUG_DEV_SERVER = true;
 
-export default class ElectronManager extends ndapp.ApplicationComponent {
+export default class ElectronManager extends ApplicationComponent {
 	async initialize() {
 		await super.initialize();
 
 		electronApp.commandLine.appendSwitch("wm-window-animations-disabled");
 
+		this.application.optionsManager.events.on(OptionsManager.EVENT_TYPES.OPTIONS_CHANGED, this.handleOptionsManagerOnOptionsChanged.bind(this));
+	}
+
+	async run() {
+		await super.run();
+
 		electronApp.whenReady().then(this.handleElectronReady.bind(this));
 	}
 
 	handleElectronReady() {
+		this.events.emit(EVENT_TYPES.ELECTRON_APP_READY);
+
 		electronApp.on("window-all-closed", () => {
 			if (process.platform !== "darwin") {
 				electronApp.quit();
@@ -21,7 +57,7 @@ export default class ElectronManager extends ndapp.ApplicationComponent {
 		});
 
 		electronApp.on("will-quit", () => {
-			app.events.emit(app.events.EVENT_TYPES.ELECTRON_APP_WILL_CLOSE);
+			this.events.emit(EVENT_TYPES.ELECTRON_APP_WILL_CLOSE);
 		});
 
 		this.createTray();
@@ -29,37 +65,35 @@ export default class ElectronManager extends ndapp.ApplicationComponent {
 
 		ipcMain.on("message", this.handleMessage.bind(this));
 
-		if (app.isDevelopment) {
+		if (this.application.isDevelopment) {
 			if (DEBUG_DEV_SERVER) {
 				const url = "http://localhost:8000/";
 				this.window.loadURL(url);
-				app.log.info(`[ElectronManager]: window loadURL at ${url}`);
+				log().info(`[ElectronManager]: window loadURL at ${url}`);
 			} else {
-				const filePath = app.path.join(app.constants.CWD, "../ui/build/index.html");
-				app.log.info("[ElectronManager]: window loadFile at ", filePath);
+				const filePath = path.join(CWD, "../ui/build/index.html");
+				log().info("[ElectronManager]: window loadFile at ", filePath);
 				this.window.loadFile(filePath);
 			}
 		} else {
-			const filePath = app.path.join(app.constants.ELECTRON_APP_PATH, "public", "index.html");
-			app.log.info("[ElectronManager]: window loadFile at ", filePath);
+			const filePath = path.join(ELECTRON_APP_PATH, "public", "index.html");
+			log().info("[ElectronManager]: window loadFile at ", filePath);
 			this.window.loadFile(filePath);
 		}
-
-		app.events.emit(app.events.EVENT_TYPES.ELECTRON_APP_READY);
 	}
 
 	createTray() {
-		this.tray = new Tray(app.assetsManager.assetPath("icon.ico"));
+		this.tray = new Tray(this.application.assetsManager.assetPath("icon.ico"));
 
 		const contextMenu = Menu.buildFromTemplate([
 			{
-				label: `${app.name} v${app.version}`,
+				label: `${APPLICATION_NAME} v${APPLICATION_VERSION}`,
 				enabled: false
 			},
 			{
 				label: "Options",
 				click: () => {
-					shell.openPath(app.optionsManager.optionsFilePath);
+					shell.openPath(this.application.optionsManager.optionsFilePath);
 				}
 			},
 			{
@@ -74,12 +108,11 @@ export default class ElectronManager extends ndapp.ApplicationComponent {
 		]);
 
 		this.tray.setContextMenu(contextMenu);
-		this.tray.setToolTip(`${app.name} v${app.version}`);
+		this.tray.setToolTip(`${APPLICATION_NAME} v${APPLICATION_VERSION}`);
 
 		this.tray
 			.on("click", () => {
-				// if (this.window.isVisible()) this.window.hide();
-				// else this.window.show();
+				if (!this.window.isVisible()) this.window.show();
 			});
 	}
 
@@ -106,7 +139,7 @@ export default class ElectronManager extends ndapp.ApplicationComponent {
 			skipTaskbar: true
 		};
 
-		if (app.isDevelopment &&
+		if (this.application.isDevelopment &&
 			DEBUG_FRAME
 		) {
 			browserWindowOptions.webPreferences.devTools = true;
@@ -127,7 +160,7 @@ export default class ElectronManager extends ndapp.ApplicationComponent {
 
 		this.window.webContents
 			.on("did-finish-load", () => {
-				if (app.isDevelopment) {
+				if (this.application.isDevelopment) {
 					this.window.webContents.openDevTools();
 
 					this.window.show();
@@ -140,36 +173,44 @@ export default class ElectronManager extends ndapp.ApplicationComponent {
 			});
 	}
 
+	handleOptionsManagerOnOptionsChanged() {
+		if (this.application.isDevelopment) return;
+
+		if (this.application.optionsManager.options.startOnSystemStart !== electronApp.getLoginItemSettings().openAtLogin) electronApp.setLoginItemSettings({ openAtLogin: this.application.optionsManager.options.startOnSystemStart });
+
+		log().info(`[ElectronManager] launchItems = ${JSON.stringify(electronApp.getLoginItemSettings().launchItems)}`);
+	}
+
 	sendMessage(message, data = {}) {
-		// if (app.isDevelopment) app.log.info("MAIN ElectronManager.sendMessage", message);
+		// if (this.application.isDevelopment) log().info("MAIN ElectronManager.sendMessage", message);
 
 		this.window.webContents.send("message", { message, ...data });
 	}
 
 	sendQueryOption(queryOption) {
-		// if (app.isDevelopment) app.log.info("MAIN ElectronManager.sendQueryOption", queryOption);
+		// if (this.application.isDevelopment) log().info("MAIN ElectronManager.sendQueryOption", queryOption);
 
-		this.sendMessage(app.enums.MESSAGE_TYPES.QUERY_OPTION, queryOption);
+		this.sendMessage(MESSAGE_TYPES.QUERY_OPTION, queryOption);
 	}
 
 	handleMessage(event, message) {
-		// if (app.isDevelopment) app.log.info("MAIN ElectronManager.handleMessage", JSON.stringify(message));
+		// if (this.application.isDevelopment) log().info("MAIN ElectronManager.handleMessage", JSON.stringify(message));
 
 		const data = _.omit(message, ["message"]);
 
 		switch (message.message) {
-			case app.enums.MESSAGE_TYPES.UPDATE_SIZE: this.updateActualWindowSize(data.width, data.height); break;
-			case app.enums.MESSAGE_TYPES.HIDE: this.window.hide(); break;
-			case app.enums.MESSAGE_TYPES.EXECUTE: app.keystrokeLauncherManager.execute(data); break;
-			case app.enums.MESSAGE_TYPES.INPUT: app.keystrokeLauncherManager.input(data.input); break;
+			case MESSAGE_TYPES.UPDATE_SIZE: this.updateActualWindowSize(data.width, data.height); break;
+			case MESSAGE_TYPES.HIDE: this.window.hide(); break;
+			case MESSAGE_TYPES.EXECUTE: this.application.keystrokeLauncherManager.execute(data); break;
+			case MESSAGE_TYPES.INPUT: this.application.keystrokeLauncherManager.input(data.input); break;
 			default: break;
 		}
 	}
 
 	updateActualWindowSize(width, height) {
-		// app.log.info(`updateActualWindowSize ${width}x${height}`);
+		// log().info(`updateActualWindowSize ${width}x${height}`);
 
-		if (app.isDevelopment &&
+		if (this.application.isDevelopment &&
 			DEBUG_FRAME
 		) return;
 
@@ -182,3 +223,5 @@ export default class ElectronManager extends ndapp.ApplicationComponent {
 		}
 	}
 };
+
+ElectronManager.EVENT_TYPES = EVENT_TYPES;

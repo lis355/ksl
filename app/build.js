@@ -1,12 +1,22 @@
+import { EOL } from "node:os";
 import { spawn } from "node:child_process";
+import path from "node:path";
 
 import _ from "lodash";
 import { parse } from "shell-quote";
-import builder from "electron-builder";
+import electronBuilder from "electron-builder";
 import fs from "fs-extra";
 
-import clearDirSync from "../common/tools/clearDirSync.js";
-import ndapp from "../common/libraries/ndapp/index.js";
+import loggerCreator from "./logger.js";
+
+function log() {
+	return log.logger || (log.logger = loggerCreator());
+}
+
+function clearDirSync(dir) {
+	fs.removeSync(dir);
+	fs.ensureDirSync(dir);
+}
 
 async function executeShellCommand({ cmd, cwd, env, onStdOutData, onStdErrData, onExit }) {
 	return new Promise(resolve => {
@@ -32,15 +42,13 @@ async function executeShellCommand({ cmd, cwd, env, onStdOutData, onStdErrData, 
 	});
 }
 
-class App extends ndapp.Application {
+class Builder {
 	async run() {
-		await super.run();
-
-		this.repoDirectory = app.path.join(process.cwd(), "..");
-		this.mainDirectory = app.path.join(this.repoDirectory, "app");
-		this.rendererDirectory = app.path.join(this.repoDirectory, "ui");
-		this.buildFilesDirectory = app.path.join(this.mainDirectory, "buildfiles");
-		this.buildDirectory = app.path.join(this.mainDirectory, "build");
+		this.repoDirectory = path.join(process.cwd(), "..");
+		this.mainDirectory = path.join(this.repoDirectory, "app");
+		this.rendererDirectory = path.join(this.repoDirectory, "ui");
+		this.buildFilesDirectory = path.join(this.mainDirectory, "buildfiles");
+		this.buildDirectory = path.join(this.mainDirectory, "build");
 
 		clearDirSync(this.buildFilesDirectory);
 		clearDirSync(this.buildDirectory);
@@ -57,10 +65,10 @@ class App extends ndapp.Application {
 			cmd: "yarn run webpack --config webpack.config.js",
 			cwd: this.mainDirectory,
 			onStdOutData: data => {
-				app.log.info(data.toString());
+				log().info(data.toString());
 			},
 			onStdErrData: data => {
-				app.log.info(data.toString());
+				log().info(data.toString());
 			}
 		});
 
@@ -72,18 +80,18 @@ class App extends ndapp.Application {
 			cmd: "yarn run ui-build",
 			cwd: this.rendererDirectory,
 			onStdOutData: data => {
-				app.log.info(data.toString());
+				log().info(data.toString());
 			},
 			onStdErrData: data => {
-				app.log.info(data.toString());
+				log().info(data.toString());
 			}
 		});
 
-		app.fs.copySync(app.path.join(this.rendererDirectory, "build"), app.path.join(this.buildFilesDirectory, "public"));
+		fs.copySync(path.join(this.rendererDirectory, "build"), path.join(this.buildFilesDirectory, "public"));
 	}
 
 	copyAssets() {
-		app.fs.copySync(app.path.join(this.mainDirectory, "assets"), app.path.join(this.buildFilesDirectory, "assets"));
+		fs.copySync(path.join(this.mainDirectory, "assets"), path.join(this.buildFilesDirectory, "assets"));
 	}
 
 	createPackageFile() {
@@ -92,16 +100,15 @@ class App extends ndapp.Application {
 		packageInfo.main = "app.bundle.js";
 		packageInfo.description = packageInfo.name;
 
-		fs.writeJsonSync(app.path.join(this.buildFilesDirectory, "package.json"), packageInfo);
+		fs.writeJsonSync(path.join(this.buildFilesDirectory, "package.json"), packageInfo);
 	}
 
 	async buildElectron() {
-		const buildResult = await builder.build();
+		const buildResult = await electronBuilder.build();
 
-		app.log.info(buildResult.join(app.os.EOL));
+		log().info(buildResult.join(EOL));
 	}
 }
 
-ndapp({
-	app: new App()
-});
+const builder = new Builder();
+await builder.run();

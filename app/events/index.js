@@ -1,8 +1,10 @@
 import EventEmitter from "events";
 
+import Enum from "@lis355/enumjs";
+
 const eventEmitter = new EventEmitter();
 
-const EVENT_TYPES = new ndapp.enum([
+const EVENT_TYPES = new Enum([
 	"ELECTRON_APP_READY",
 	"ELECTRON_APP_WILL_CLOSE"
 ]);

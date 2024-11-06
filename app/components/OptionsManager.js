@@ -1,5 +1,13 @@
+import path from "node:path";
+
 import _ from "lodash";
+import Enum from "@lis355/enumjs";
 import fs from "fs-extra";
+
+import ApplicationComponent from "./ApplicationComponent.js";
+import ElectronManager from "./ElectronManager.js";
+
+import log from "../log.js";
 
 const OPTIONS_BASE = {
 	"runHotkey": "Ctrl + Alt + P",
@@ -7,35 +15,59 @@ const OPTIONS_BASE = {
 	"plugins": []
 };
 
-export default class OptionsManager extends ndapp.ApplicationComponent {
+const EVENT_TYPES = new Enum([
+	"OPTIONS_CHANGED"
+]);
+
+export default class OptionsManager extends ApplicationComponent {
 	async initialize() {
 		await super.initialize();
 
 		const optionsFilePath = this.optionsFilePath;
-		app.log.info(`[OptionsManager]: optionsFilePath ${optionsFilePath}`);
+		log().info(`[OptionsManager]: optionsFilePath ${optionsFilePath}`);
 
-		let success = false;
-		if (app.fs.existsSync(this.optionsFilePath)) {
-			try {
-				this.options = fs.readJsonSync(this.optionsFilePath);
-				success = true;
-			} catch (error) {
-				app.log.error(error);
-			}
-		}
+		if (!this.tryLoadOptions()) this.save();
 
-		if (!success) {
-			this.options = _.cloneDeep(OPTIONS_BASE);
+		fs.watch(optionsFilePath, _.debounce(this.handleOptionsFileChanged.bind(this), 500, { leading: false }));
 
-			this.save();
-		}
+		this.application.electronManager.events.on(ElectronManager.EVENT_TYPES.ELECTRON_APP_READY, this.handleElectronManagerOnElectronAppReady.bind(this));
 	}
 
 	get optionsFilePath() {
-		return app.path.join(app.userDataManager.userDataPath(), "options.json");
+		return path.join(this.application.userDataManager.userDataPath(), "options.json");
+	}
+
+	tryLoadOptions() {
+		if (fs.existsSync(this.optionsFilePath)) {
+			try {
+				this.options = fs.readJsonSync(this.optionsFilePath);
+
+				return true;
+			} catch (error) {
+				log().error(error);
+
+				this.options = _.cloneDeep(OPTIONS_BASE);
+			}
+		}
+
+		Object.freeze(this.options);
+
+		return false;
 	}
 
 	save() {
 		fs.outputJsonSync(this.optionsFilePath, this.options);
 	}
-};
+
+	handleOptionsFileChanged() {
+		this.tryLoadOptions();
+
+		this.events.emit(EVENT_TYPES.OPTIONS_CHANGED);
+	}
+
+	handleElectronManagerOnElectronAppReady() {
+		this.events.emit(EVENT_TYPES.OPTIONS_CHANGED);
+	}
+}
+
+OptionsManager.EVENT_TYPES = EVENT_TYPES;

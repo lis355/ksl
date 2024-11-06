@@ -7,7 +7,7 @@ export default class GoogleLauncherPlugin extends LauncherPlugin {
 	async load() {
 		await super.load();
 
-		this.icon = app.iconsManager.loadPngIconInBase64(app.assetsManager.assetPath("google-icon.png"));
+		this.icon = this.application.iconsManager.loadPngIconInBase64(this.application.assetsManager.assetPath("google-icon.png"));
 	}
 
 	input(input) {

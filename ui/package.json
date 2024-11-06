@@ -8,6 +8,7 @@
 		"ui-build": "react-scripts build"
 	},
 	"dependencies": {
+		"@lis355/enumjs": "^1.0.1",
 		"classnames": "^2.5.1",
 		"electron": "^33.0.2",
 		"is-electron": "^2.2.2",

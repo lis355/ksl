@@ -7,7 +7,7 @@ export default class CalculatorLauncherPlugin extends LauncherPlugin {
 	async load() {
 		await super.load();
 
-		this.icon = await app.iconsManager.loadIconFromFile(app.assetsManager.assetPath("calculator-icon.png"));
+		this.icon = await this.pluginsManager.application.iconsManager.loadIconFromFile(this.pluginsManager.application.assetsManager.assetPath("calculator-icon.png"));
 	}
 
 	query(query, queryOptionsReceiver) {

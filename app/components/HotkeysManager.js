@@ -1,21 +1,27 @@
 import { globalShortcut } from "electron";
 
-export default class HotkeysManager extends ndapp.ApplicationComponent {
+import ApplicationComponent from "./ApplicationComponent.js";
+import ElectronManager from "./ElectronManager.js";
+import OptionsManager from "./OptionsManager.js";
+
+export default class HotkeysManager extends ApplicationComponent {
 	async initialize() {
 		await super.initialize();
 
-		app.events.on(app.events.EVENT_TYPES.ELECTRON_APP_READY, this.handleElectronAppReady.bind(this));
-		app.events.on(app.events.EVENT_TYPES.ELECTRON_APP_WILL_CLOSE, this.handleElectronAppWillClose.bind(this));
+		this.application.electronManager.events.on(ElectronManager.EVENT_TYPES.ELECTRON_APP_WILL_CLOSE, this.handleElectronManagerOnElectronAppWillClose.bind(this));
+		this.application.optionsManager.events.on(OptionsManager.EVENT_TYPES.OPTIONS_CHANGED, this.handleOptionsManagerOnOptionsChanged.bind(this));
 	}
 
-	handleElectronAppReady() {
-		globalShortcut.register(app.optionsManager.options.runHotkey, () => {
-			app.electronManager.showWindowIfNotVisible();
-		});
-	}
-
-	handleElectronAppWillClose() {
+	handleElectronManagerOnElectronAppWillClose() {
 		this.unregisterAllHotkeys();
+	}
+
+	handleOptionsManagerOnOptionsChanged() {
+		this.unregisterAllHotkeys();
+
+		globalShortcut.register(this.application.optionsManager.options.runHotkey, () => {
+			this.application.electronManager.showWindowIfNotVisible();
+		});
 	}
 
 	unregisterAllHotkeys() {

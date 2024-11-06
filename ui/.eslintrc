@@ -1,6 +1,10 @@
 {
 	"extends": "react-app",
 	"rules": {
+		"jsx-quotes": [
+			"error",
+			"prefer-double"
+		],
 		"semi": [
 			"error",
 			"always"
@@ -9,9 +13,13 @@
 			"error",
 			"double"
 		],
-		"jsx-quotes": [
+		"comma-dangle": [
 			"error",
-			"prefer-double"
+			"never"
+		],
+		"eol-last": [
+			"error",
+			"always"
 		]
 	}
 }

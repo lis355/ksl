@@ -13,7 +13,7 @@ export default class PasswordGeneratorLauncherPlugin extends LauncherPlugin {
 	async load() {
 		await super.load();
 
-		this.icon = await app.iconsManager.loadIconFromFile(app.assetsManager.assetPath("password-generator-icon.png"));
+		this.icon = await this.pluginsManager.application.iconsManager.loadIconFromFile(this.pluginsManager.application.assetsManager.assetPath("password-generator-icon.png"));
 	}
 
 	query(query, queryOptionsReceiver) {

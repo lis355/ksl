@@ -1,6 +1,8 @@
+import hash from "../../tools/hash.js";
+
 export default class Query {
 	constructor(text) {
 		this.text = text;
-		this.id = app.tools.hash(this.text);
+		this.id = hash(this.text);
 	}
 }

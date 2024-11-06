@@ -1,10 +1,10 @@
 import EventEmitter from "events";
 
 export default class LauncherPlugin extends EventEmitter {
-	constructor(launcher) {
+	constructor(pluginsManager) {
 		super();
 
-		this.launcher = launcher;
+		this.pluginsManager = pluginsManager;
 	}
 
 	async load() { }

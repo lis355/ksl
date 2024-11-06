@@ -5,9 +5,8 @@ import _ from "lodash";
 import * as stackTrace from "stack-trace";
 import ansi from "ansi-escape-sequences";
 import dayjs from "dayjs";
+import Enum from "@lis355/enumjs";
 import fs from "fs-extra";
-
-import Enum from "../enum/index.js";
 
 const LOG_LEVELS = new Enum([
 	"INFO",
@@ -15,19 +14,15 @@ const LOG_LEVELS = new Enum([
 	"ERROR"
 ]);
 
-const LOGS_HISTORY_MAX_LENGTH = 50;
-
 class Logger {
-	constructor(logsHistoryMaxLength = LOGS_HISTORY_MAX_LENGTH) {
-		this.logsHistoryMaxLength = logsHistoryMaxLength;
+	constructor(logsHistoryLength = 0) {
+		this.logsHistoryLength = logsHistoryLength;
 		this.messages = [];
 		this.listeners = [];
 
-		LOG_LEVELS.all.forEach(level => {
+		for (const { key: level } of LOG_LEVELS) {
 			this[_.lowerCase(level)] = (...objects) => this.log(level, objects.map(obj => obj.toString()).join(" "));
-		});
-
-		this.groups = new Set((process.env.NDAPP_LOG_DEBUG || "").split(",").map(name => name.trim()).filter(Boolean));
+		}
 	}
 
 	get history() {
@@ -48,9 +43,11 @@ class Logger {
 			text
 		};
 
-		this.messages.push(message);
+		if (this.logsHistoryLength > 0) {
+			this.messages.push(message);
 
-		while (this.messages.length > this.logsHistoryMaxLength) this.messages.shift();
+			while (this.messages.length > this.logsHistoryLength) this.messages.shift();
+		}
 
 		this.listeners.forEach(callback => callback(message));
 	}
@@ -62,12 +59,6 @@ class Logger {
 	removeListener(callback) {
 		var index = this.listeners.indexOf(callback);
 		if (index > -1) this.listeners.splice(index, 1);
-	}
-
-	useLogs(group) {
-		if (!group) return false;
-		if (this.groups.has("*")) return true;
-		return this.groups.has(group);
 	}
 }
 
@@ -105,8 +96,8 @@ class LoggerFileListener {
 	constructor(logPath) {
 		logPath = logPath || path.join(process.cwd(), "log.txt");
 
-		app.fs.ensureDirSync(path.dirname(logPath));
-		app.fs.removeSync(logPath);
+		fs.ensureDirSync(path.dirname(logPath));
+		fs.removeSync(logPath);
 
 		this.logStream = fs.createWriteStream(logPath, { flags: "a" });
 	}
@@ -117,10 +108,10 @@ class LoggerFileListener {
 	}
 };
 
-export function loggerCreator(options) {
+export default function loggerCreator(options) {
 	options = options || {};
 
-	const logger = new Logger(options.logsHistoryMaxLength);
+	const logger = new Logger(options.logsHistoryLength);
 
 	const loggerConsoleListener = new LoggerConsoleListener();
 	logger.addListener(loggerConsoleListener.handleMessage.bind(loggerConsoleListener));

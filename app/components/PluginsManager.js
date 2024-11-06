@@ -1,6 +1,14 @@
-import createPlugins from "../launcherPlugins/createPlugins.js";
+import path from "node:path";
 
-export default class PluginsManager extends ndapp.ApplicationComponent {
+import fs from "fs-extra";
+
+import ApplicationComponent from "./ApplicationComponent.js";
+import createPlugins from "../launcherPlugins/createPlugins.js";
+import ElectronManager from "./ElectronManager.js";
+
+import log from "../log.js";
+
+export default class PluginsManager extends ApplicationComponent {
 	async initialize() {
 		await super.initialize();
 
@@ -8,7 +16,7 @@ export default class PluginsManager extends ndapp.ApplicationComponent {
 
 		await this.createPlugins();
 
-		app.events.on(app.events.EVENT_TYPES.ELECTRON_APP_READY, this.handleElectronAppReady.bind(this));
+		this.application.electronManager.events.on(ElectronManager.EVENT_TYPES.ELECTRON_APP_READY, this.handleElectronAppReady.bind(this));
 	}
 
 	async createPlugins() {
@@ -25,18 +33,18 @@ export default class PluginsManager extends ndapp.ApplicationComponent {
 	}
 
 	async createUserPlugins() {
-		const optionsFileDirectory = app.path.dirname(app.optionsManager.optionsFilePath);
-		for (const pluginOptions of app.optionsManager.options.plugins) {
-			const pluginDirectory = app.path.resolve(optionsFileDirectory, pluginOptions.directory);
+		const optionsFileDirectory = path.dirname(this.application.optionsManager.optionsFilePath);
+		for (const pluginOptions of this.application.optionsManager.options.plugins) {
+			const pluginDirectory = path.resolve(optionsFileDirectory, pluginOptions.directory);
 
 			let plugin;
 
 			try {
-				app.log.info(`[PluginsManager]: try to load plugin at ${pluginDirectory}`);
+				log().info(`[PluginsManager]: try to load plugin at ${pluginDirectory}`);
 
-				const pluginPackage = app.fs.readJsonSync(app.path.resolve(pluginDirectory, "package.json"));
+				const pluginPackage = fs.readJsonSync(path.resolve(pluginDirectory, "package.json"));
 
-				const pluginPath = "file:///" + app.path.resolve(pluginDirectory, pluginPackage.main);
+				const pluginPath = "file:///" + path.resolve(pluginDirectory, pluginPackage.main);
 
 				const module = await import(pluginPath);
 
@@ -48,9 +56,9 @@ export default class PluginsManager extends ndapp.ApplicationComponent {
 
 				if (plugin.load) await plugin.load();
 
-				app.log.info(`[PluginsManager]: plugin at ${pluginDirectory} loaded`);
+				log().info(`[PluginsManager]: plugin at ${pluginDirectory} loaded`);
 			} catch (error) {
-				app.log.error(`[PluginsManager]: plugin can't load at ${pluginDirectory} with error: ${error.stack}`);
+				log().error(`[PluginsManager]: plugin can't load at ${pluginDirectory} with error: ${error.stack}`);
 			}
 
 			this.addPlugin(plugin);
