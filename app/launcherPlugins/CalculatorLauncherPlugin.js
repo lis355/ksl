@@ -4,17 +4,17 @@ import LauncherPlugin from "./LauncherPlugin.js";
 import QueryOption from "../components/queries/QueryOption.js";
 
 export default class CalculatorLauncherPlugin extends LauncherPlugin {
-	async load() {
-		await super.load();
-
-		this.icon = await this.pluginsManager.application.iconsManager.loadIconFromFile(this.pluginsManager.application.assetsManager.assetPath("calculator-icon.png"));
+	async load(pluginsManager) {
+		this.icon = await pluginsManager.application.iconsManager.loadIconFromFile(pluginsManager.application.assetsManager.assetPath("calculator-icon.png"));
 	}
+
+	async unload() { }
 
 	query(query, queryOptionsReceiver) {
 		try {
 			const result = mathjs.evaluate(query.text);
 			if (Number.isFinite(result)) {
-				const str = mathjs.format(result, { precision: 5 });
+				const str = mathjs.format(result, { precision: 10 });
 				if (str !== query.text) {
 					queryOptionsReceiver(this, new QueryOption(
 						query,

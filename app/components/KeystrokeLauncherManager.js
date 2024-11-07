@@ -2,6 +2,8 @@ import Query from "./queries/Query.js";
 
 import ApplicationComponent from "./ApplicationComponent.js";
 
+import log from "../log.js";
+
 export default class KeystrokeLauncherManager extends ApplicationComponent {
 	async initialize() {
 		await super.initialize();
@@ -12,7 +14,11 @@ export default class KeystrokeLauncherManager extends ApplicationComponent {
 	input(str) {
 		this.currentQuery = new Query(str);
 
-		this.application.pluginsManager.plugins.forEach(plugin => plugin.query(this.currentQuery, this.handlePluginQueryOption));
+		this.application.pluginsManager.plugins.forEach(plugin => {
+			// if (plugin.constructor.name === "") debugger;
+
+			plugin.query(this.currentQuery, this.handlePluginQueryOption);
+		});
 	}
 
 	handlePluginQueryOption(plugin, queryOption) {
@@ -20,6 +26,8 @@ export default class KeystrokeLauncherManager extends ApplicationComponent {
 			this.currentQuery.id !== queryOption.query.id) return;
 
 		queryOption.pluginId = plugin.index;
+
+		// log().info("[KeystrokeLauncherManager]: queryOption", JSON.stringify(queryOption));
 
 		this.application.electronManager.sendQueryOption(queryOption);
 	}

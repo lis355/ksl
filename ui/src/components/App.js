@@ -3,11 +3,14 @@ import classnames from "classnames";
 import Enum from "@lis355/enumjs";
 import React from "react";
 
+import AsyncQueue from "../tools/AsyncQueue.js";
+
 const MESSAGE_TYPES = new Enum([
 	"UPDATE_SIZE",
 	"HIDE",
 	"EXECUTE",
 	"INPUT",
+	"CLEAR",
 	"QUERY_OPTION"
 ]);
 
@@ -20,6 +23,8 @@ const MESSAGE_INPUT_DEBOUNCE_DELAY_IN_MILLISECONDS = 200;
 export default class App extends React.Component {
 	constructor() {
 		super();
+
+		this.handleQueryOptionAsyncQueue = new AsyncQueue();
 
 		this.componentReference = React.createRef();
 
@@ -86,6 +91,10 @@ export default class App extends React.Component {
 
 	handleMessageClientMessage(message) {
 		switch (message.message) {
+			case MESSAGE_TYPES.CLEAR:
+				this.clearInput();
+				break;
+
 			case MESSAGE_TYPES.QUERY_OPTION:
 				this.handleQueryOption(message, _.omit(message, ["message"]));
 				break;
@@ -110,19 +119,23 @@ export default class App extends React.Component {
 	}
 
 	handleQueryOption(queryOption) {
-		const options = Array.from(this.state.options);
-		let optionSeletedIndex = this.state.optionSeletedIndex;
+		this.handleQueryOptionAsyncQueue.push(async () => new Promise(resolve => {
+			const options = Array.from(this.state.options);
+			let optionSeletedIndex = this.state.optionSeletedIndex;
 
-		options.push(queryOption);
+			options.push(queryOption);
 
-		if (options.length === 1) optionSeletedIndex = 0;
+			if (options.length === 1) optionSeletedIndex = 0;
 
-		this.setState({
-			options,
-			optionSeletedIndex
-		}, () => {
-			this.sendMessageUpdateSize();
-		});
+			this.setState({
+				options,
+				optionSeletedIndex
+			}, () => {
+				this.sendMessageUpdateSize();
+
+				return resolve();
+			});
+		}));
 	}
 
 	selectPrevious() {
@@ -134,18 +147,25 @@ export default class App extends React.Component {
 	}
 
 	selectOptionIndex(index) {
+		index = index % this.state.options.length;
+		if (index === this.state.optionSeletedIndex) return;
+
 		this.setState({
 			optionSeletedIndex: index % this.state.options.length
 		});
 	}
 
-	clearInputAndHide() {
+	clearInput() {
 		this.setState({
 			input: "",
 			tooltip: "",
 			options: [],
 			optionSeletedIndex: -1
 		});
+	}
+
+	clearInputAndHide() {
+		this.clearInput();
 
 		this.sendMessage(MESSAGE_TYPES.HIDE);
 	}
@@ -177,6 +197,8 @@ export default class App extends React.Component {
 	}
 
 	render() {
+		// console.log("App.render", this.state);
+
 		return (
 			<div className="flex-fill"
 				ref={this.componentReference}

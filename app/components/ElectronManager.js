@@ -9,6 +9,7 @@ const MESSAGE_TYPES = new Enum([
 	"HIDE",
 	"EXECUTE",
 	"INPUT",
+	"CLEAR",
 	"QUERY_OPTION"
 ]);
 
@@ -112,7 +113,7 @@ export default class ElectronManager extends ApplicationComponent {
 
 		this.tray
 			.on("click", () => {
-				if (!this.window.isVisible()) this.window.show();
+				this.showWindowIfNotVisible();
 			});
 	}
 
@@ -163,7 +164,7 @@ export default class ElectronManager extends ApplicationComponent {
 				if (this.application.isDevelopment) {
 					this.window.webContents.openDevTools();
 
-					this.window.show();
+					this.showWindowIfNotVisible();
 				}
 			});
 
@@ -182,19 +183,19 @@ export default class ElectronManager extends ApplicationComponent {
 	}
 
 	sendMessage(message, data = {}) {
-		// if (this.application.isDevelopment) log().info("MAIN ElectronManager.sendMessage", message);
+		// if (this.application.isDevelopment) log().info("[ElectronManager]: sendMessage", message, JSON.stringify(data));
 
 		this.window.webContents.send("message", { message, ...data });
 	}
 
 	sendQueryOption(queryOption) {
-		// if (this.application.isDevelopment) log().info("MAIN ElectronManager.sendQueryOption", queryOption);
+		// if (this.application.isDevelopment) log().info("[ElectronManager]: sendQueryOption", JSON.stringify(queryOption));
 
 		this.sendMessage(MESSAGE_TYPES.QUERY_OPTION, queryOption);
 	}
 
 	handleMessage(event, message) {
-		// if (this.application.isDevelopment) log().info("MAIN ElectronManager.handleMessage", JSON.stringify(message));
+		// if (this.application.isDevelopment) log().info("[ElectronManager]: handleMessage", JSON.stringify(message));
 
 		const data = _.omit(message, ["message"]);
 
@@ -219,6 +220,8 @@ export default class ElectronManager extends ApplicationComponent {
 
 	showWindowIfNotVisible() {
 		if (!this.window.isVisible()) {
+			this.sendMessage(MESSAGE_TYPES.CLEAR);
+
 			this.window.show();
 		}
 	}

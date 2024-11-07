@@ -1,5 +1,3 @@
-import { clipboard } from "electron";
-
 import LauncherPlugin from "./LauncherPlugin.js";
 import QueryOption from "../components/queries/QueryOption.js";
 
@@ -10,11 +8,13 @@ function generatePassword() {
 }
 
 export default class PasswordGeneratorLauncherPlugin extends LauncherPlugin {
-	async load() {
-		await super.load();
+	async load(pluginsManager) {
+		this.pluginsManager = pluginsManager;
 
-		this.icon = await this.pluginsManager.application.iconsManager.loadIconFromFile(this.pluginsManager.application.assetsManager.assetPath("password-generator-icon.png"));
+		this.icon = await pluginsManager.application.iconsManager.loadIconFromFile(pluginsManager.application.assetsManager.assetPath("password-generator-icon.png"));
 	}
+
+	async unload() { }
 
 	query(query, queryOptionsReceiver) {
 		const queryTextLower = query.text.toLowerCase();
@@ -33,6 +33,6 @@ export default class PasswordGeneratorLauncherPlugin extends LauncherPlugin {
 	}
 
 	execute(queryOption) {
-		clipboard.writeText(queryOption.text);
+		this.pluginsManager.electron.clipboard.writeText(queryOption.text);
 	}
 };
