@@ -29,6 +29,7 @@ export default class App extends React.Component {
 		this.componentReference = React.createRef();
 
 		this.selectOptionIndex = this.selectOptionIndex.bind(this);
+		this.executeSelectedOptionAndHide = this.executeSelectedOptionAndHide.bind(this);
 		this.handleInputChange = this.handleInputChange.bind(this);
 		this.handleKeyDown = this.handleKeyDown.bind(this);
 		this.handleMessageClientMessage = this.handleMessageClientMessage.bind(this);
@@ -73,9 +74,7 @@ export default class App extends React.Component {
 				break;
 
 			case "Enter":
-				if (this.state.optionSeletedIndex >= 0) this.sendMessage(MESSAGE_TYPES.EXECUTE, _.pick(this.state.options[this.state.optionSeletedIndex], "query", "text", "pluginId"));
-
-				this.clearInputAndHide();
+				this.executeSelectedOptionAndHide();
 
 				break;
 
@@ -93,6 +92,8 @@ export default class App extends React.Component {
 		switch (message.message) {
 			case MESSAGE_TYPES.CLEAR:
 				this.clearInput();
+
+				document.querySelector("input.keystroke-input").focus();
 				break;
 
 			case MESSAGE_TYPES.QUERY_OPTION:
@@ -155,6 +156,12 @@ export default class App extends React.Component {
 		});
 	}
 
+	executeSelectedOptionAndHide() {
+		if (this.state.optionSeletedIndex >= 0) this.sendMessage(MESSAGE_TYPES.EXECUTE, _.pick(this.state.options[this.state.optionSeletedIndex], "query", "text", "pluginId"));
+
+		this.clearInputAndHide();
+	}
+
 	clearInput() {
 		this.setState({
 			input: "",
@@ -209,6 +216,7 @@ export default class App extends React.Component {
 					options={this.state.options}
 					optionSeletedIndex={this.state.optionSeletedIndex}
 					selectOptionIndex={this.selectOptionIndex}
+					executeSelectedOptionAndHide={this.executeSelectedOptionAndHide}
 					handleInputChange={this.handleInputChange}
 				/>
 			</div>
@@ -242,6 +250,7 @@ class Keystroke extends React.Component {
 
 						selected={index === this.props.optionSeletedIndex}
 						handleMouseMove={() => this.props.selectOptionIndex(index)}
+						handleMouseUp={() => this.props.executeSelectedOptionAndHide()}
 					/>
 				)}
 			</div>
@@ -254,6 +263,7 @@ class KeystrokeOption extends React.Component {
 		return (
 			<div className={classnames("keystroke-line flex-fill flex keystroke-option", { "keystroke-line-selected": this.props.selected })}
 				onMouseMove={this.props.handleMouseMove}
+				onMouseUp={this.props.handleMouseUp}
 			>
 				{this.props.icon &&
 					<div className="keystroke-option-icon">

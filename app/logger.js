@@ -103,8 +103,7 @@ class LoggerFileListener {
 	}
 
 	handleMessage(message) {
-		const text = `[${message.level} | ${getMessageTextDate(message)}")}]: ${message.text} (${getTraceInfo()})`;
-		this.logStream.write(text + os.EOL);
+		this.logStream.write(`[${message.level} | ${getMessageTextDate(message)}]: ${message.text} (${getTraceInfo()})${os.EOL}`);
 	}
 };
 

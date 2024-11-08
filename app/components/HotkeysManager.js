@@ -20,7 +20,8 @@ export default class HotkeysManager extends ApplicationComponent {
 		this.unregisterAllHotkeys();
 
 		globalShortcut.register(this.application.optionsManager.options.runHotkey, () => {
-			this.application.electronManager.showWindowIfNotVisible();
+			if (this.application.electronManager.windowIsVisible) this.application.electronManager.hideWindow();
+			else this.application.electronManager.showWindow();
 		});
 	}
 

@@ -25,7 +25,8 @@ import {
 	APPLICATION_NAME,
 	APPLICATION_VERSION,
 	CWD,
-	ELECTRON_APP_PATH
+	ELECTRON_APP_PATH,
+	LOG_PATH
 } from "../constants.js";
 
 import log from "../log.js";
@@ -95,6 +96,12 @@ export default class ElectronManager extends ApplicationComponent {
 				label: "Options",
 				click: () => {
 					shell.openPath(this.application.optionsManager.optionsFilePath);
+				}
+			},
+			{
+				label: "Log",
+				click: () => {
+					shell.openPath(LOG_PATH);
 				}
 			},
 			{
@@ -170,7 +177,7 @@ export default class ElectronManager extends ApplicationComponent {
 
 		this.window
 			.on("blur", () => {
-				this.window.hide();
+				this.hideWindow();
 			});
 	}
 
@@ -201,7 +208,7 @@ export default class ElectronManager extends ApplicationComponent {
 
 		switch (message.message) {
 			case MESSAGE_TYPES.UPDATE_SIZE: this.updateActualWindowSize(data.width, data.height); break;
-			case MESSAGE_TYPES.HIDE: this.window.hide(); break;
+			case MESSAGE_TYPES.HIDE: this.hideWindow(); break;
 			case MESSAGE_TYPES.EXECUTE: this.application.keystrokeLauncherManager.execute(data); break;
 			case MESSAGE_TYPES.INPUT: this.application.keystrokeLauncherManager.input(data.input); break;
 			default: break;
@@ -218,12 +225,25 @@ export default class ElectronManager extends ApplicationComponent {
 		this.window.setBounds({ width, height }, false);
 	}
 
-	showWindowIfNotVisible() {
-		if (!this.window.isVisible()) {
-			this.sendMessage(MESSAGE_TYPES.CLEAR);
+	get windowIsVisible() {
+		return this.window.isVisible();
+	}
 
-			this.window.show();
+	showWindow() {
+		this.sendMessage(MESSAGE_TYPES.CLEAR);
+
+		this.window.show();
+		this.window.focus();
+	}
+
+	showWindowIfNotVisible() {
+		if (!this.windowIsVisible) {
+			this.showWindow();
 		}
+	}
+
+	hideWindow() {
+		this.window.hide();
 	}
 };
 

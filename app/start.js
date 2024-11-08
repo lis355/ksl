@@ -16,13 +16,14 @@ import PluginsManager from "./components/PluginsManager.js";
 import UserDataManager from "./components/UserDataManager.js";
 
 import {
-	DEVELOPER_ENVIRONMENT,
 	APPLICATION_NAME,
 	APPLICATION_VERSION,
+	BUILD_EXE_PATH,
 	CWD,
-	LOG_PATH,
+	DEVELOPER_ENVIRONMENT,
+	ELECTRON_APP_PATH,
 	LOCAL_APP_DATA_PATH,
-	ELECTRON_APP_PATH
+	LOG_PATH
 } from "./constants.js";
 
 import log from "./log.js";
@@ -65,9 +66,11 @@ class App extends Application {
 	async initialize() {
 		log().info(`${APPLICATION_NAME} v${APPLICATION_VERSION}`);
 
-		log().info(`LOG_PATH ${LOG_PATH}`);
-		log().info(`LOCAL_APP_DATA_PATH ${LOCAL_APP_DATA_PATH}`);
+		log().info(`CWD ${CWD}`);
+		log().info(`BUILD_EXE_PATH ${BUILD_EXE_PATH}`);
 		log().info(`ELECTRON_APP_PATH ${ELECTRON_APP_PATH}`);
+		log().info(`LOCAL_APP_DATA_PATH ${LOCAL_APP_DATA_PATH}`);
+		log().info(`LOG_PATH ${LOG_PATH}`);
 
 		await super.initialize();
 	}

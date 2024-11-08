@@ -1,4 +1,4 @@
-import { EOL } from "node:os";
+import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
 import path from "node:path";
 
@@ -7,7 +7,12 @@ import { parse } from "shell-quote";
 import electronBuilder from "electron-builder";
 import fs from "fs-extra";
 
+import dayjs from "dayjs";
+import duration from "dayjs/plugin/duration.js";
+
 import loggerCreator from "./logger.js";
+
+dayjs.extend(duration);
 
 function log() {
 	return log.logger || (log.logger = loggerCreator());
@@ -16,6 +21,10 @@ function log() {
 function clearDirSync(dir) {
 	fs.removeSync(dir);
 	fs.ensureDirSync(dir);
+}
+
+function getSha256(data) {
+	return createHash("sha256").update(data).digest("hex");
 }
 
 async function executeShellCommand({ cmd, cwd, env, onStdOutData, onStdErrData, onExit }) {
@@ -44,11 +53,15 @@ async function executeShellCommand({ cmd, cwd, env, onStdOutData, onStdErrData, 
 
 class Builder {
 	async run() {
+		this.buildTime = dayjs();
+
 		this.repoDirectory = path.join(process.cwd(), "..");
 		this.mainDirectory = path.join(this.repoDirectory, "app");
 		this.rendererDirectory = path.join(this.repoDirectory, "ui");
 		this.buildFilesDirectory = path.join(this.mainDirectory, "buildfiles");
 		this.buildDirectory = path.join(this.mainDirectory, "build");
+
+		this.packageFile = fs.readJsonSync(path.join(this.mainDirectory, "package.json"));
 
 		clearDirSync(this.buildFilesDirectory);
 		clearDirSync(this.buildDirectory);
@@ -58,6 +71,10 @@ class Builder {
 		this.copyAssets();
 		this.createPackageFile();
 		await this.buildElectron();
+
+		this.buildTime = dayjs() - this.buildTime;
+
+		this.createInfo();
 	}
 
 	async buildLauncherBundle() {
@@ -106,7 +123,28 @@ class Builder {
 	async buildElectron() {
 		const buildResult = await electronBuilder.build();
 
-		log().info(buildResult.join(EOL));
+		this.buildExePath = buildResult.join();
+
+		const exeData = fs.readFileSync(this.buildExePath);
+		this.buildExeSize = exeData.length;
+		this.buildSha256 = getSha256(fs.readFileSync(this.buildExePath));
+	}
+
+	createInfo() {
+		const info = {
+			node: process.versions.node,
+			exe: this.buildExePath,
+			size: this.buildExeSize,
+			sha256: this.buildSha256,
+			time: dayjs().toISOString(),
+			buildTime: dayjs.duration(this.buildTime).toISOString()
+		};
+
+		const str = JSON.stringify(info, null, "\t");
+		fs.writeFileSync(path.join(this.buildDirectory, "info.json"), str);
+		log().info(str);
+
+		spawn("explorer.exe", [this.buildDirectory]);
 	}
 }
 
