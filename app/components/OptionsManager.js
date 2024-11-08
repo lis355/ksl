@@ -38,25 +38,22 @@ export default class OptionsManager extends ApplicationComponent {
 	}
 
 	tryLoadOptions() {
-		if (fs.existsSync(this.optionsFilePath)) {
-			try {
-				this.options = fs.readJsonSync(this.optionsFilePath);
-
-				return true;
-			} catch (error) {
-				log().error(error);
-
-				this.options = _.cloneDeep(OPTIONS_BASE);
-			}
+		try {
+			if (fs.existsSync(this.optionsFilePath)) this.options = fs.readJsonSync(this.optionsFilePath);
+		} catch (error) {
+			log().error(error);
 		}
+
+		const success = Boolean(this.options);
+		if (!success) this.options = _.cloneDeep(OPTIONS_BASE);
 
 		Object.freeze(this.options);
 
-		return false;
+		return success;
 	}
 
 	save() {
-		fs.outputJsonSync(this.optionsFilePath, this.options);
+		fs.outputJsonSync(this.optionsFilePath, this.options, { spaces: "\t" });
 	}
 
 	handleOptionsFileChanged() {

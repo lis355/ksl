@@ -23,8 +23,8 @@ export const APPLICATION_NAME = name;
 export const APPLICATION_VERSION = version;
 
 export const LOCAL_APP_DATA_PATH = path.join(LOCALAPPDATA, APPLICATION_NAME);
-// export const USER_DATA_PATH = path.join(CWD, "userData");
-export const USER_DATA_PATH = path.join(LOCAL_APP_DATA_PATH, "userData");
+export const USER_DATA_PATH = path.join(CWD, "userData");
+// export const USER_DATA_PATH = path.join(LOCAL_APP_DATA_PATH, "userData");
 
-export const LOG_DIRECTORY = path.join(LOCAL_APP_DATA_PATH, "logs");
-export const LOG_PATH = path.join(LOG_DIRECTORY, /*dayjs().format("DD-MM-YYYY HH-mm-ss")*/"log" + ".txt");
+export const LOG_DIRECTORY = path.join(USER_DATA_PATH); // "logs"
+export const LOG_PATH = path.join(LOG_DIRECTORY, "log.txt"); // dayjs().format("DD-MM-YYYY HH-mm-ss")
