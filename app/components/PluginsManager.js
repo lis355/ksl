@@ -62,7 +62,9 @@ export default class PluginsManager extends ApplicationComponent {
 	}
 
 	async createAndLoadUserPlugin(pluginOptions, optionsFileDirectory) {
-		const pluginDirectory = path.resolve(optionsFileDirectory, pluginOptions.directory);
+		const pluginDirectory = path.isAbsolute(pluginOptions.directory)
+			? pluginOptions.directory
+			: path.resolve(optionsFileDirectory, pluginOptions.directory);
 
 		let plugin;
 
@@ -71,9 +73,10 @@ export default class PluginsManager extends ApplicationComponent {
 
 			const pluginPackage = fs.readJsonSync(path.resolve(pluginDirectory, "package.json"));
 
-			const pluginPath = "file:///" + path.resolve(pluginDirectory, pluginPackage.main);
+			const pluginPath = "file://" + path.resolve(pluginDirectory, pluginPackage.main);
 
-			const module = await import(pluginPath);
+			// https://webpack.js.org/api/module-methods/#dynamic-expressions-in-import
+			const module = await import(/* webpackIgnore: true */ pluginPath);
 
 			const pluginClass = module.default;
 
@@ -86,7 +89,7 @@ export default class PluginsManager extends ApplicationComponent {
 
 			await plugin.load(this);
 
-			log().info(`[PluginsManager]: plugin ${plugin.constructor.name} at ${pluginDirectory} loaded`);
+			log().info(`[PluginsManager]: plugin ${plugin.constructor.name} at ${pluginPath} loaded`);
 		} catch (error) {
 			log().error(`[PluginsManager]: plugin can't load at ${pluginDirectory} with error: ${error.stack}`);
 		}
