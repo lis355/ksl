@@ -87,7 +87,7 @@ export default class PluginsManager extends ApplicationComponent {
 
 			await plugin.load(this);
 
-			log().info(`[PluginsManager]: plugin ${plugin.constructor.name} at ${pluginPath} loaded`);
+			log().info(`[PluginsManager]: plugin ${plugin.constructor.name} loaded`);
 
 			return plugin;
 		} catch (error) {

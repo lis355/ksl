@@ -81,7 +81,7 @@ class App extends Application {
 		if (this.isDevelopment) {
 			try {
 				const onRunFilePath = path.join(CWD, "onRun.js");
-				if (fs.existsSync(onRunFilePath)) await import(`file:///${onRunFilePath}`);
+				if (fs.existsSync(onRunFilePath)) await (await import(`file:///${onRunFilePath}`)).default(this);
 			} catch (error) {
 				console.error(error);
 			}

@@ -1,4 +1,3 @@
-import { EOL } from "node:os";
 import path from "node:path";
 
 import _ from "lodash";
@@ -33,7 +32,7 @@ import {
 import log from "../log.js";
 
 const DEBUG_FRAME = false;
-const DEBUG_DEV_SERVER = true;
+const DEBUG_DEV_SERVER = false;
 
 export default class ElectronManager extends ApplicationComponent {
 	async initialize() {
@@ -41,7 +40,7 @@ export default class ElectronManager extends ApplicationComponent {
 
 		electronApp.commandLine.appendSwitch("wm-window-animations-disabled");
 
-		log().info(`[ElectronManager]: loginItemSettings${EOL}${JSON.stringify(electronApp.getLoginItemSettings())}`);
+		log().info(`[ElectronManager]: loginItemSettings ${JSON.stringify(electronApp.getLoginItemSettings())}`);
 
 		this.application.optionsManager.events.on(OptionsManager.EVENT_TYPES.OPTIONS_CHANGED, this.handleOptionsManagerOnOptionsChanged.bind(this));
 	}

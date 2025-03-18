@@ -35,6 +35,8 @@ export default class KeystrokeLauncherManager extends ApplicationComponent {
 	execute(queryOption) {
 		const plugin = this.application.pluginsManager.plugins[queryOption.pluginId];
 
+		// log().info(`[KeystrokeLauncherManager]: plugin ${plugin.constructor.name} execute queryOption`, JSON.stringify(queryOption));
+
 		plugin.execute(queryOption);
 	}
 };
