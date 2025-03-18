@@ -48,25 +48,23 @@ export default class PluginsManager extends ApplicationComponent {
 	async createAndLoadUserPlugins() {
 		const optionsFileDirectory = path.dirname(this.application.optionsManager.optionsFilePath);
 
-		const userPlugins = await Promise.all(this.application.optionsManager.options.plugins.map(async pluginOptions => {
-			try {
-				const plugin = await this.createAndLoadUserPlugin(pluginOptions, optionsFileDirectory);
+		const userPlugins = await Promise.all(this.application.optionsManager.options.plugins.map(async pluginOptions => this.createAndLoadUserPlugin(pluginOptions, optionsFileDirectory)));
+		const loadedUserPlugins = userPlugins.filter(Boolean);
 
-				return plugin;
-			} catch (error) {
-				return null;
-			}
-		}));
-
-		return userPlugins;
+		return loadedUserPlugins;
 	}
 
 	async createAndLoadUserPlugin(pluginOptions, optionsFileDirectory) {
-		const pluginDirectory = path.isAbsolute(pluginOptions.directory)
-			? pluginOptions.directory
-			: path.resolve(optionsFileDirectory, pluginOptions.directory);
+		let pluginDirectory;
+		try {
+			pluginDirectory = path.isAbsolute(pluginOptions.directory)
+				? pluginOptions.directory
+				: path.resolve(optionsFileDirectory, pluginOptions.directory);
+		} catch (error) {
+			log().error(`[PluginsManager]: plugin options error, no directory: ${error.stack}`);
 
-		let plugin;
+			return null;
+		}
 
 		try {
 			log().info(`[PluginsManager]: try to load plugin at ${pluginDirectory}`);
@@ -80,7 +78,7 @@ export default class PluginsManager extends ApplicationComponent {
 
 			const pluginClass = module.default;
 
-			plugin = new pluginClass();
+			let plugin = new pluginClass();
 
 			if (typeof plugin.load !== "function" ||
 				typeof plugin.unload !== "function" ||
@@ -90,10 +88,12 @@ export default class PluginsManager extends ApplicationComponent {
 			await plugin.load(this);
 
 			log().info(`[PluginsManager]: plugin ${plugin.constructor.name} at ${pluginPath} loaded`);
+
+			return plugin;
 		} catch (error) {
-			log().error(`[PluginsManager]: plugin can't load at ${pluginDirectory} with error: ${error.stack}`);
+			log().error(`[PluginsManager]: plugin can't load at ${pluginDirectory} with error: ${error.message}`);
 		}
 
-		return plugin;
+		return null;
 	}
 };

@@ -1,3 +1,4 @@
+import { EOL } from "node:os";
 import path from "node:path";
 
 import _ from "lodash";
@@ -39,6 +40,8 @@ export default class ElectronManager extends ApplicationComponent {
 		await super.initialize();
 
 		electronApp.commandLine.appendSwitch("wm-window-animations-disabled");
+
+		log().info(`[ElectronManager]: loginItemSettings${EOL}${JSON.stringify(electronApp.getLoginItemSettings())}`);
 
 		this.application.optionsManager.events.on(OptionsManager.EVENT_TYPES.OPTIONS_CHANGED, this.handleOptionsManagerOnOptionsChanged.bind(this));
 	}
